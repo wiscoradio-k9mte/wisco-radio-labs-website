@@ -61,9 +61,13 @@ gloss pass worked (reachable newcomers rose: Tariq 3→4, Hassan 2→3; expert h
   security → ham radio (the infosec/software work is what pulled him in).
 
 ## Open / pending
-- **Needs Travis:** About **photo** (placeholder slot in place); an honest line on whether he
-  **operates CW on the air** (expert ham + brand-truth both want it — only if true); real article
-  content over time (one seed post shipped).
+- **Needs Travis:** About **photo** (placeholder slot in place — one-line swap when supplied);
+  real article content over time (one seed post shipped).
+- **DONE 2026-06-29 (PR #2):** the honest **CW-learner framing** — Travis is NOT on the air with
+  CW yet; he built the trainer to learn it. Shipped to the About bio + a **blog voice pass** that
+  reframes "why this exists" around the integrated-QSO gap (existing trainers drill the pieces;
+  none rehearse the full QSO) — competitors researched (Morse Elmer / MorseMania) but **NOT named**
+  per Travis. Brand-truth PASS.
 - **Go-live sequence (domain day):** register domain → set `site` + drop `base` in astro.config
   + add `public/CNAME` + enforce HTTPS → flip `PREVIEW_NOINDEX=false` → enable Web3Forms
   captcha/spam + **end-to-end form test** (submit → confirm it lands in Gmail) → wire analytics +
