@@ -142,6 +142,30 @@ Ran the whole team read-only: test-qa, web-designer (a11y), security-engineer, b
   `youtube.com/@Wisco-Radio-K9MTE` ("K9MTE (Travis)", verified resolves).
 - check-links now also gates aria-id resolution, single-h1, heading-skips, RSS drafts (all bite).
 
+## Second full review (2026-06-29) — verdict READY; punch list is ALL MINOR
+After the fix batch + 8 polish minors, ran the complete team again (4 expert lanes + diverse 5-persona
+panel re-run on the fixed site). **No blockers anywhere; all review-1 blockers + polish fixes confirmed
+closed; gates green + biting; no regressions.** Expert verdicts: QA READY/PASS (React fully removed — zero
+JS bundles, ~5KB inline/page); design/a11y READY (AA both themes verified); security SIGN-OFF (Web3Forms
+key = non-finding; go-live config list stands); brand-truth PASS. **Panel deltas (1st→2nd): Tariq 3→4,
+Hassan 2→3 (glosses landed for reachable newcomers), Walt 4→4, Gene 3→3 (qualitatively better), Bex 2→2
+(audience-fit).** Open punch list (all minor, Travis to choose in the morning whether to fix before/after
+a push-to-main):
+- **Gloss-pass v2** (extends the light-gloss decision): QRZ never glossed (every newcomer hit it); "73"
+  unglossed on the contact success message; "the Driftless" unglossed in footer/non-home; cut the
+  developer-ism "store facade / pure React and Web Audio" from the PRODUCT page; the raw `snap install`
+  on the HOME teaser reads too technical for a newcomer; small glosses (de, K9MTE=callsign, activations,
+  simplify "GPL-3.0-or-later" → "free & open source").
+- **IOTA consistency:** it's in "What it is" + blog but missing from how-to step 5 (Walt + brand-truth);
+  IOTA IS in the app (`buildIota`) → add it to step 5; tighten "activations" wording.
+- **Tags still read tappable** (Bex, Tariq, design): make ALL decorative tags fully plain incl. PostCard
+  hover (or build the filter island — but that re-adds React; plain-label is the cheaper call).
+- **Tiny nits:** redundant aria on field errors; redundant sr-only span on toggle; silent clipboard-fail.
+- **Nice-to-haves** (Tariq/Walt): snapd prereq note, system-requirements line, "back to blog" link,
+  "VBand"→"USB Morse key adapter (such as VBand)", blog code-block copy button, contact response-time.
+- **Needs Travis:** About photo; an honest line about whether he actually operates CW on the air
+  (Walt + brand-truth both want it — closes the "operator who actually uses them" loop, only if true).
+
 ## Open decisions / pending from Travis
 - **About-page photo** — branded placeholder in place; one-line swap when Travis supplies it.
 - Real article content (Travis writes over time; one seed post shipped).
