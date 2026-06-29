@@ -1,0 +1,123 @@
+---
+import { Image } from 'astro:assets';
+import { SITE_TITLE } from '../consts';
+import { withBase } from '../lib/link';
+import Nav from './Nav.astro';
+import ThemeToggle from './ThemeToggle.astro';
+import MobileMenu from './MobileMenu.astro';
+import logo from '../assets/brand/wisco-radio-labs-logo.png';
+---
+<header class="site-header">
+  <div class="header-inner container">
+    <!-- Logo + wordmark — links to Home -->
+    <a href={withBase('/')} class="header-logo-link" aria-label="Wisco Radio Labs — home">
+      <Image
+        src={logo}
+        alt=""
+        width={40}
+        height={40}
+        class="header-logo-img"
+        loading="eager"
+        decoding="async"
+      />
+      <span class="header-wordmark">{SITE_TITLE}</span>
+    </a>
+
+    <!-- Desktop nav (hidden on mobile via CSS) -->
+    <nav class="header-nav" aria-label="Primary">
+      <Nav />
+    </nav>
+
+    <!-- Right controls: theme toggle always visible; mobile menu trigger on mobile only -->
+    <div class="header-controls">
+      <ThemeToggle />
+      <div class="mobile-only">
+        <MobileMenu />
+      </div>
+    </div>
+  </div>
+</header>
+
+<style>
+  .site-header {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background-color: var(--surface-1);
+    border-bottom: 1px solid var(--border);
+    transition: background-color 200ms ease;
+  }
+
+  .header-inner {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+    height: 4rem;
+  }
+
+  .header-logo-link {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    text-decoration: none;
+    flex-shrink: 0;
+  }
+
+  .header-logo-link:focus-visible {
+    outline: 3px solid var(--focus-ring);
+    outline-offset: 4px;
+    border-radius: var(--radius-sm);
+  }
+
+  .header-logo-img {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: contain;
+  }
+
+  .header-wordmark {
+    font-family: var(--font-display);
+    font-size: var(--fs-body);
+    font-weight: 500;
+    color: var(--text);
+    white-space: nowrap;
+  }
+
+  /* Desktop nav: visible >= 768px */
+  .header-nav {
+    display: none;
+    flex: 1;
+    justify-content: flex-end;
+  }
+
+  @media (min-width: 768px) {
+    .header-nav {
+      display: flex;
+    }
+  }
+
+  .header-controls {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    margin-left: auto;
+  }
+
+  @media (min-width: 768px) {
+    .header-controls {
+      margin-left: 0;
+    }
+  }
+
+  /* Mobile-only: the menu trigger (MobileMenu component renders it) */
+  .mobile-only {
+    display: flex;
+  }
+
+  @media (min-width: 768px) {
+    .mobile-only {
+      display: none;
+    }
+  }
+</style>

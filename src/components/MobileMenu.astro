@@ -1,0 +1,264 @@
+---
+// MobileMenu.astro — slide-in drawer triggered by the "Menu" button.
+// No React. A module script handles aria-expanded, focus trap, Esc-close, scrim click.
+// Drawer is role="dialog" aria-modal="true" so screen readers know focus is trapped.
+import Nav from './Nav.astro';
+---
+
+<!-- Menu trigger button (rendered in Header.astro; this component owns the drawer itself) -->
+<button
+  id="mobile-menu-trigger"
+  class="menu-trigger"
+  type="button"
+  aria-expanded="false"
+  aria-controls="mobile-menu-drawer"
+  aria-label="Open navigation menu"
+>
+  <!-- Hamburger icon -->
+  <svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none"
+       stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <line x1="3" y1="6" x2="21" y2="6"/>
+    <line x1="3" y1="12" x2="21" y2="12"/>
+    <line x1="3" y1="18" x2="21" y2="18"/>
+  </svg>
+  <span class="menu-label">Menu</span>
+</button>
+
+<!-- Scrim overlay -->
+<div id="mobile-menu-scrim" class="menu-scrim" aria-hidden="true"></div>
+
+<!-- Drawer -->
+<div
+  id="mobile-menu-drawer"
+  class="menu-drawer"
+  role="dialog"
+  aria-modal="true"
+  aria-label="Navigation menu"
+>
+  <div class="menu-drawer-header">
+    <span class="menu-drawer-title">Menu</span>
+    <button
+      id="mobile-menu-close"
+      class="menu-close"
+      type="button"
+      aria-label="Close navigation menu"
+    >
+      <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none"
+           stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="18" y1="6" x2="6" y2="18"/>
+        <line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+      <span>Close</span>
+    </button>
+  </div>
+  <nav aria-label="Mobile navigation">
+    <Nav class="drawer-nav" />
+  </nav>
+</div>
+
+<script>
+  const trigger = document.getElementById('mobile-menu-trigger');
+  const drawer = document.getElementById('mobile-menu-drawer');
+  const closeBtn = document.getElementById('mobile-menu-close');
+  const scrim = document.getElementById('mobile-menu-scrim');
+
+  if (!trigger || !drawer || !closeBtn || !scrim) {
+    // Should never happen but guard so a missing element doesn't throw on load
+    console.warn('MobileMenu: missing required elements');
+  } else {
+    const FOCUSABLE = 'a[href], button:not([disabled]), input, [tabindex]:not([tabindex="-1"])';
+    // The main content wrapper to mark inert while drawer is open (screen-reader completeness).
+    const mainEl = document.getElementById('main');
+
+    const open = () => {
+      drawer.classList.add('is-open');
+      trigger.setAttribute('aria-expanded', 'true');
+      scrim.classList.add('menu-scrim--visible');
+      document.body.style.overflow = 'hidden';
+      // Inert prevents AT from reaching page content while the dialog is open.
+      if (mainEl) mainEl.inert = true;
+
+      // Move focus to the first focusable element in the drawer
+      const first = drawer.querySelector<HTMLElement>(FOCUSABLE);
+      first?.focus();
+    };
+
+    const close = () => {
+      drawer.classList.remove('is-open');
+      trigger.setAttribute('aria-expanded', 'false');
+      scrim.classList.remove('menu-scrim--visible');
+      document.body.style.overflow = '';
+      if (mainEl) mainEl.inert = false;
+      trigger.focus(); // return focus to trigger on close
+    };
+
+    trigger.addEventListener('click', open);
+    closeBtn.addEventListener('click', close);
+    scrim.addEventListener('click', close);
+
+    // Close any nav link click (navigating away)
+    drawer.querySelectorAll('a').forEach(link => link.addEventListener('click', close));
+
+    // Escape key closes
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && drawer.classList.contains('is-open')) close();
+    });
+
+    // Focus trap: keep Tab cycling within the drawer while open
+    drawer.addEventListener('keydown', (e) => {
+      if (e.key !== 'Tab' || !drawer.classList.contains('is-open')) return;
+      const focusable = Array.from(drawer.querySelectorAll<HTMLElement>(FOCUSABLE));
+      if (focusable.length === 0) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+
+      if (e.shiftKey) {
+        if (document.activeElement === first) {
+          e.preventDefault();
+          last.focus();
+        }
+      } else {
+        if (document.activeElement === last) {
+          e.preventDefault();
+          first.focus();
+        }
+      }
+    });
+  }
+</script>
+
+<style>
+  /* Trigger button — visible only on mobile (header hides it on desktop) */
+  .menu-trigger {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    min-height: 48px;
+    padding: var(--space-2) var(--space-3);
+    background: transparent;
+    border: none;
+    border-radius: var(--radius-sm);
+    color: var(--text-secondary);
+    font-family: var(--font-display);
+    font-size: var(--fs-small);
+    font-weight: 500;
+    cursor: pointer;
+    transition: color 150ms ease;
+  }
+
+  .menu-trigger:hover { color: var(--text); }
+  .menu-trigger:focus-visible { outline: 3px solid var(--focus-ring); outline-offset: 2px; }
+
+  /* Scrim */
+  .menu-scrim {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 200ms ease;
+    z-index: 99;
+  }
+
+  .menu-scrim--visible {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .menu-scrim { transition: none; }
+  }
+
+  /* Drawer — driven by .is-open class rather than the `hidden` attribute so the
+     translateX transition can actually run (display:none blocks transitions on reveal). */
+  .menu-drawer {
+    position: fixed;
+    top: 0;
+    right: 0;
+    width: min(85vw, 360px);
+    height: 100svh;
+    background: var(--surface-1);
+    border-left: 1px solid var(--border);
+    z-index: 100;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    /* Closed: slide off-screen and hide from AT + pointer events. */
+    visibility: hidden;
+    transform: translateX(100%);
+    /* When closing: let the slide finish (200ms) before hiding from AT. */
+    transition: transform 200ms ease, visibility 0s linear 200ms;
+  }
+
+  .menu-drawer.is-open {
+    visibility: visible;
+    transform: translateX(0);
+    /* When opening: show immediately, then slide in. */
+    transition: transform 200ms ease, visibility 0s linear;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .menu-drawer,
+    .menu-drawer.is-open { transition: none; }
+  }
+
+  .menu-drawer-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--space-4) var(--space-5);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .menu-drawer-title {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: var(--fs-body);
+    color: var(--text);
+  }
+
+  .menu-close {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    min-height: 48px;
+    padding: var(--space-2) var(--space-3);
+    background: transparent;
+    border: none;
+    border-radius: var(--radius-sm);
+    color: var(--text-secondary);
+    font-family: var(--font-display);
+    font-size: var(--fs-small);
+    font-weight: 500;
+    cursor: pointer;
+    transition: color 150ms ease;
+  }
+
+  .menu-close:hover { color: var(--text); }
+  .menu-close:focus-visible { outline: 3px solid var(--focus-ring); outline-offset: 2px; }
+
+  /* Override Nav list layout for drawer: vertical stack, full-width rows */
+  :global(.drawer-nav) {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 0 !important;
+    padding: var(--space-4) 0 !important;
+  }
+
+  :global(.drawer-nav .nav-link) {
+    min-height: 56px !important;
+    padding-inline: var(--space-6) !important;
+    border-radius: 0 !important;
+    border-bottom: 1px solid var(--border) !important;
+    font-size: var(--fs-body) !important;
+  }
+
+  :global(.drawer-nav .nav-link::after) {
+    display: none !important; /* no underline indicator in drawer; active color is enough */
+  }
+
+  :global(.drawer-nav .nav-link--active) {
+    color: var(--brand-ink) !important;
+    background: var(--brand-tint) !important;
+  }
+</style>

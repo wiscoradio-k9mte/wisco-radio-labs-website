@@ -1,0 +1,173 @@
+---
+// About — Travis intro, background, why Wisco Radio Labs.
+// Photo slot is pending from Travis; branded placeholder is in place.
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { withBase } from '../lib/link';
+---
+<BaseLayout
+  title="About"
+  description="Travis Engh, K9MTE — ham radio operator, maker, and the person behind Wisco Radio Labs. Made in the Driftless."
+>
+  <section class="section container about-section">
+
+    <div class="about-layout">
+
+      <!-- Photo slot (4:5 portrait) -->
+      <!-- TODO: replace this placeholder with Travis's photo.
+           When adding the real photo:
+             1. Put the image file in src/assets/ (Astro optimizes it and handles the base path).
+             2. Import it and replace the placeholder div below with:
+                  <Image src={photo} alt="Travis Engh, K9MTE, in his workshop" width={400} height={500} ... />
+           One swap point, nothing else changes. -->
+      <div class="photo-slot" aria-label="Photo coming soon">
+        <div class="photo-placeholder">
+          <!-- Tower mark / brand icon -->
+          <svg aria-hidden="true" width="64" height="64" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+            <path d="M2 17l10 5 10-5"/>
+            <path d="M2 12l10 5 10-5"/>
+          </svg>
+          <p class="photo-placeholder-label">Photo coming soon</p>
+        </div>
+      </div>
+
+      <!-- Text -->
+      <div class="about-body">
+        <p class="eyebrow">Made in the Driftless (southwest Wisconsin)</p>
+        <h1 class="about-title">About Wisco Radio Labs</h1>
+        <p class="about-lead">
+          Ham radio, built in the open — one project at a time, out of southwest Wisconsin.
+        </p>
+
+        <div class="about-prose">
+          <p>
+            I'm Travis Engh, K9MTE (my callsign). I run Wisco Radio Labs — a one-person maker brand building
+            tools for the amateur-radio community. My background runs from military
+            maintenance and systems work into software engineering, and then information security —
+            years of hands-on discipline that taught me to build things that are repairable,
+            legible, and honest about what they do and don't do.
+          </p>
+          <p>
+            That path is what pulled me into ham radio. Working on software, and then on securing
+            it, turned into a genuine love of building hardware and the software that makes it run —
+            and radio is where those two finally meet.
+          </p>
+          <p>
+            I started Wisco Radio Labs because I wanted a place to build radio things in the
+            open and share the work. The first product is the CW Trainer — a Morse-code training
+            app built the way I wanted to learn: Koch method, real copy and sending practice, and
+            a QSO simulator that feels like an actual contact. I built it for myself and decided
+            it was worth sharing.
+          </p>
+          <p>
+            "Made in the Driftless" is a place and a posture. The Driftless Area of southwest
+            Wisconsin is a specific place — old hills and river valleys, stubbornly themselves
+            while the rest of the midwest was flattened and then sprawled. That's the attitude.
+            Build it well. Make it repairable. Show the work.
+          </p>
+          <p>
+            This site is the bench log: what I'm building, how it's going, and what I got wrong
+            the first time. More projects are in progress.
+          </p>
+        </div>
+
+        <div class="about-ctas">
+          <a href={withBase('/blog/')} class="btn btn-primary">Read the blog</a>
+          <a href={withBase('/contact/')} class="btn btn-secondary">Get in touch</a>
+        </div>
+      </div>
+
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .about-section {
+    padding-bottom: var(--space-12);
+  }
+
+  .about-layout {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-8);
+    align-items: flex-start;
+  }
+
+  @media (min-width: 768px) {
+    .about-layout {
+      flex-direction: row;
+      align-items: flex-start;
+      gap: var(--space-10);
+    }
+  }
+
+  /* Photo slot */
+  .photo-slot {
+    flex: 0 0 auto;
+    width: 70%;
+    max-width: 320px;
+    align-self: center;
+  }
+
+  @media (min-width: 768px) {
+    .photo-slot {
+      width: 38%;
+      align-self: flex-start;
+    }
+  }
+
+  .photo-placeholder {
+    aspect-ratio: 4 / 5;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-4);
+    color: var(--brand);
+  }
+
+  .photo-placeholder-label {
+    font-size: var(--fs-caption);
+    color: var(--text-muted);
+    margin: 0;
+    text-align: center;
+  }
+
+  /* Body */
+  .about-body {
+    flex: 1;
+    max-width: var(--measure);
+  }
+
+  .about-title {
+    font-size: var(--fs-h1);
+    margin: 0 0 var(--space-4);
+  }
+
+  .about-lead {
+    font-size: var(--fs-h4);
+    color: var(--text-secondary);
+    line-height: 1.6;
+    margin: 0 0 var(--space-6);
+  }
+
+  /* Primary body text: --text (not --text-secondary) so it matches the blog's emphasis.
+     The lead above it stays at --text-secondary — intentionally lighter as an intro. */
+  .about-prose p {
+    color: var(--text);
+    line-height: 1.7;
+    margin: 0 0 var(--space-5);
+    font-size: var(--fs-body);
+  }
+
+  .about-ctas {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+    margin-top: var(--space-6);
+  }
+</style>

@@ -1,0 +1,101 @@
+---
+// ThemeToggle.astro — dark/light toggle button.
+// No React. An inline module script does the toggle — ~10 lines of DOM work.
+// The FOUC-free init lives in BaseLayout's inline <head> script; this script runs after paint.
+---
+<button
+  id="theme-toggle"
+  class="theme-toggle"
+  type="button"
+  aria-label="Switch to light theme"
+  title="Toggle theme"
+>
+  <!-- Sun icon (shown in dark mode — clicking switches to light) -->
+  <svg class="icon-sun" aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none"
+       stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="5"/>
+    <line x1="12" y1="1" x2="12" y2="3"/>
+    <line x1="12" y1="21" x2="12" y2="23"/>
+    <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
+    <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+    <line x1="1" y1="12" x2="3" y2="12"/>
+    <line x1="21" y1="12" x2="23" y2="12"/>
+    <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+    <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+  </svg>
+  <!-- Moon icon (shown in light mode — clicking switches to dark) -->
+  <svg class="icon-moon" aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none"
+       stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+  </svg>
+  <!-- aria-label on the button is the AT text; the sr-only span inside was ignored and redundant. -->
+</button>
+
+<script>
+  // Runs deferred (after first paint — the no-FOUC init in BaseLayout already handled the correct theme).
+  // On click: flip the data-theme attribute and persist to localStorage.
+  const toggle = document.getElementById('theme-toggle');
+  if (toggle) {
+    // Sync aria-label to the current theme so AT says what will happen on click.
+    const syncToggle = () => {
+      const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+      toggle.setAttribute('aria-label', isLight ? 'Switch to dark theme' : 'Switch to light theme');
+    };
+
+    syncToggle(); // match the state the inline script already set
+
+    toggle.addEventListener('click', () => {
+      const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+      const next = isLight ? 'dark' : 'light';
+      document.documentElement.setAttribute('data-theme', next);
+      localStorage.setItem('theme', next);
+
+      // Keep browser-chrome color in sync with the chosen theme's background.
+      const themeMeta = document.getElementById('theme-color-meta');
+      if (themeMeta) {
+        themeMeta.setAttribute('content', next === 'light' ? '#F7F4EF' : '#0F1115');
+      }
+
+      syncToggle();
+    });
+  }
+</script>
+
+<style>
+  .theme-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    background: transparent;
+    border: none;
+    border-radius: var(--radius-pill);
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: background-color 150ms ease, color 150ms ease;
+    flex-shrink: 0;
+  }
+
+  .theme-toggle:hover {
+    color: var(--text);
+    background-color: var(--brand-tint);
+  }
+
+  .theme-toggle:focus-visible {
+    outline: 3px solid var(--focus-ring);
+    outline-offset: 2px;
+  }
+
+  .theme-toggle:active {
+    color: var(--brand-active);
+  }
+
+  /* In dark mode: show sun (to indicate "click for light") */
+  .icon-sun { display: block; }
+  .icon-moon { display: none; }
+
+  /* In light mode: show moon (to indicate "click for dark") */
+  :root[data-theme="light"] .icon-sun { display: none; }
+  :root[data-theme="light"] .icon-moon { display: block; }
+</style>

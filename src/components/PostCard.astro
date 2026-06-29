@@ -1,0 +1,187 @@
+---
+// PostCard.astro — blog index card.
+// The whole card is one link; no nested links inside (accessibility).
+import { Image } from 'astro:assets';
+import { withBase } from '../lib/link';
+import FormattedDate from './FormattedDate.astro';
+
+interface Props {
+  title: string;
+  description: string;
+  pubDate: Date;
+  href: string;
+  heroImage?: ImageMetadata;
+  tags?: string[];
+}
+
+const { title, description, pubDate, href, heroImage, tags = [] } = Astro.props;
+---
+<article class="post-card">
+  <a href={withBase(href)} class="post-card-link">
+    {heroImage ? (
+      <div class="post-card-image-wrap">
+        <Image
+          src={heroImage}
+          alt=""
+          width={640}
+          height={360}
+          class="post-card-image"
+          loading="lazy"
+          decoding="async"
+        />
+      </div>
+    ) : (
+      <div class="post-card-image-placeholder" aria-hidden="true">
+        <!--
+          Brand tower mark — same geometry as the favicon, sized for the card.
+          Uses CSS custom properties (--brand, --border) so it respects both themes.
+          Derived from favicon.svg: M16,8 L10,22 L14,22 L14,18 L18,18 L18,22 L22,22 Z
+          in a 32×32 viewBox. Signal arcs radiate from the beacon at (16,7).
+        -->
+        <svg width="64" height="64" viewBox="0 0 32 32" aria-hidden="true">
+          <!-- Circular badge background -->
+          <circle cx="16" cy="16" r="14" fill="var(--border)" opacity="0.6"/>
+          <!-- Signal wave (outer) -->
+          <path d="M7 7 Q16 13 25 7" stroke="var(--brand)" stroke-width="1" fill="none"
+                stroke-linecap="round" opacity="0.6"/>
+          <!-- Signal wave (inner) -->
+          <path d="M10 10 Q16 14 22 10" stroke="var(--brand)" stroke-width="1.2" fill="none"
+                stroke-linecap="round" opacity="0.9"/>
+          <!-- Beacon dot -->
+          <circle cx="16" cy="7" r="1.8" fill="var(--brand)"/>
+          <!-- Tower body (A-frame with leg recesses) -->
+          <path d="M16 8 L10 22 L14 22 L14 18 L18 18 L18 22 L22 22 Z"
+                fill="var(--brand)" opacity="0.85"/>
+        </svg>
+      </div>
+    )}
+
+    <div class="post-card-body">
+      {tags.length > 0 && (
+        <div class="post-card-tags" aria-hidden="true">
+          <span class="post-card-tags-label">Topics:</span>
+          {tags.slice(0, 2).map(tag => (
+            <span class="tag">{tag}</span>
+          ))}
+        </div>
+      )}
+      <h3 class="post-card-title">{title}</h3>
+      <p class="post-card-desc">{description}</p>
+      <p class="post-card-date">
+        <FormattedDate date={pubDate} />
+      </p>
+    </div>
+  </a>
+</article>
+
+<style>
+  .post-card {
+    background: var(--surface-1);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    transition: border-color 150ms ease, box-shadow 150ms ease;
+  }
+
+  .post-card:hover {
+    border-color: var(--border-strong);
+    box-shadow: var(--shadow-md);
+  }
+
+  .post-card-link {
+    display: block;
+    text-decoration: none;
+    color: inherit;
+    height: 100%;
+  }
+
+  .post-card-link:focus-visible {
+    outline: 3px solid var(--focus-ring);
+    outline-offset: 2px;
+    border-radius: var(--radius-md);
+  }
+
+  /* Image */
+  .post-card-image-wrap {
+    overflow: hidden;
+    aspect-ratio: 16 / 9;
+  }
+
+  .post-card-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 0;
+    transition: transform 200ms ease;
+  }
+
+  .post-card:hover .post-card-image {
+    transform: scale(1.02);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .post-card:hover .post-card-image {
+      transform: none;
+    }
+  }
+
+  /* No-image placeholder */
+  .post-card-image-placeholder {
+    aspect-ratio: 16 / 9;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--surface-2);
+    color: var(--brand);
+  }
+
+  /* Card body */
+  .post-card-body {
+    padding: var(--space-5);
+  }
+
+  .post-card-tags {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2);
+    margin-bottom: var(--space-3);
+  }
+
+  .post-card-tags-label {
+    font-size: var(--fs-caption);
+    font-weight: 500;
+    color: var(--text-secondary);
+  }
+
+  .post-card-title {
+    font-family: var(--font-display);
+    font-size: var(--fs-h3);
+    font-weight: 500;
+    line-height: 1.25;
+    color: var(--text);
+    margin: 0 0 var(--space-3);
+    transition: color 150ms ease;
+  }
+
+  .post-card:hover .post-card-title {
+    color: var(--brand-ink);
+  }
+
+  .post-card-desc {
+    font-size: var(--fs-small);
+    color: var(--text-secondary);
+    margin: 0 0 var(--space-3);
+    /* Two-line clamp */
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .post-card-date {
+    font-size: var(--fs-caption);
+    color: var(--text-muted);
+    margin: 0;
+  }
+</style>

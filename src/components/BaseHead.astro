@@ -1,0 +1,123 @@
+---
+// BaseHead.astro — all <head> meta, SEO, canonical, OG, RSS, JSON-LD, icons.
+// Every URL emitted here is built from Astro.site + Astro.url to be absolute and base-aware.
+// A hard-coded '/...' path 404s on a project-page site — so nothing is hard-coded.
+//
+// Analytics insertion point: ANALYTICS_ENABLED is currently false (src/consts.ts).
+// To enable: set ANALYTICS_ENABLED = true in consts.ts, then replace `null` in the
+// {ANALYTICS_ENABLED && ...} expression below with the vendor <script> element.
+// Vendor is an open decision — not wired until Travis picks one at domain go-live.
+import { SITE_TITLE, SITE_DESCRIPTION, ANALYTICS_ENABLED, PREVIEW_NOINDEX } from '../consts';
+import { withBase } from '../lib/link';
+import '../styles/global.css';
+
+interface Props {
+  title: string;
+  description?: string;
+  image?: string; // absolute URL for og:image
+}
+
+const { title, description = SITE_DESCRIPTION, image } = Astro.props;
+
+// Build an absolute OG image URL. Public assets need the base path prepended.
+const siteOrigin = Astro.site?.origin ?? '';
+const ogImage = image ?? `${siteOrigin}${withBase('/og-default.png')}`;
+
+// Canonical URL: Astro.url already includes site + base + current path.
+const canonicalURL = Astro.url.href;
+
+// Site root URL (origin + base path) — used in JSON-LD.
+const siteRoot = `${siteOrigin}${withBase('/')}`;
+
+const pageTitle = title === SITE_TITLE ? title : `${title} — ${SITE_TITLE}`;
+
+// JSON-LD: Organization + WebSite — present on every page.
+// Only true facts: real name, real URL, real founder callsign.
+const siteSchema = JSON.stringify([
+  {
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    name: SITE_TITLE,
+    url: siteRoot,
+    author: {
+      '@type': 'Person',
+      name: 'Travis Engh',
+      callSign: 'K9MTE',
+    },
+  },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'Organization',
+    name: SITE_TITLE,
+    url: siteRoot,
+    logo: ogImage,
+    founder: {
+      '@type': 'Person',
+      name: 'Travis Engh',
+      callSign: 'K9MTE',
+    },
+  },
+]);
+---
+
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+<title>{pageTitle}</title>
+<meta name="description" content={description} />
+<link rel="canonical" href={canonicalURL} />
+
+<!-- Preview guard: keep the public github.io preview out of search indexes while we
+     iterate. Flip PREVIEW_NOINDEX to false in consts.ts at real go-live. -->
+{PREVIEW_NOINDEX && <meta name="robots" content="noindex, nofollow" />}
+
+<!-- Favicon: SVG (preferred) + PNG fallbacks for browsers that only accept raster.
+     All paths go through withBase() — required for the GH Pages sub-path deploy. -->
+<link rel="icon" type="image/svg+xml" href={withBase('/favicon.svg')} />
+<link rel="icon" type="image/png" sizes="32x32" href={withBase('/icons/icon-32.png')} />
+<link rel="icon" type="image/png" sizes="16x16" href={withBase('/icons/icon-16.png')} />
+<link rel="apple-touch-icon" sizes="180x180" href={withBase('/icons/apple-touch-icon.png')} />
+
+<!-- Web app manifest (dynamic endpoint — icon paths are base-path-aware) -->
+<link rel="manifest" href={withBase('/site.webmanifest')} />
+
+<!-- RSS autodiscovery + sitemap alternate links -->
+<link
+  rel="alternate"
+  type="application/rss+xml"
+  title={`${SITE_TITLE} RSS feed`}
+  href={withBase('/rss.xml')}
+/>
+
+<!-- Open Graph -->
+<meta property="og:type" content="website" />
+<meta property="og:url" content={canonicalURL} />
+<meta property="og:title" content={pageTitle} />
+<meta property="og:description" content={description} />
+<meta property="og:image" content={ogImage} />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content="Wisco Radio Labs — ham radio, built in the open." />
+<meta property="og:site_name" content={SITE_TITLE} />
+
+<!-- Twitter Card -->
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content={pageTitle} />
+<meta name="twitter:description" content={description} />
+<meta name="twitter:image" content={ogImage} />
+<meta name="twitter:image:alt" content="Wisco Radio Labs — ham radio, built in the open." />
+<meta name="twitter:creator" content="@K9MTE" />
+
+<!-- theme-color: single tag driven by JS so browser chrome follows the user's choice,
+     not the OS preference. Default to dark (#0F1115 = --bg in dark mode).
+     The inline no-flash script in BaseLayout sets the correct value before first paint;
+     ThemeToggle.astro updates it on every toggle. -->
+<meta id="theme-color-meta" name="theme-color" content="#0F1115" />
+
+<!-- JSON-LD structured data: Organization + WebSite (on every page).
+     BlogPosting is injected per-article via the <slot name="head"> in BaseLayout.
+     is:inline silences the Astro hint — this is intentionally a raw JSON block,
+     not a processed module script. -->
+<script is:inline type="application/ld+json" set:html={siteSchema} />
+
+{ANALYTICS_ENABLED && null /* replace null with the vendor <script> element */}

@@ -1,0 +1,99 @@
+---
+/**
+ * SignalWave.astro — brand motif: three concentric arcs echoing the logo's
+ * radiating signal waves.  Used as a section divider or subtle backdrop element.
+ *
+ * Usage:
+ *   <SignalWave />                     default — 48px tall, 25% opacity
+ *   <SignalWave height={32} opacity={0.18} />
+ *
+ * Design notes:
+ *   - Static by default (no animation).  If animation is ever added, a
+ *     prefers-reduced-motion guard is required — the CSS block below does it.
+ *   - Restraint is the brand.  Keep opacity low; this is seasoning, not décor.
+ *   - aria-hidden="true" — purely decorative; screen readers skip it.
+ */
+
+interface Props {
+  /** Height in pixels (SVG intrinsic).  Width always stretches to container. */
+  height?: number;
+  /** Overall SVG opacity.  0.25 is the design-system default for subtle use. */
+  opacity?: number;
+  /** Additional classes forwarded to the svg element. */
+  class?: string;
+}
+
+const { height = 48, opacity = 0.25, class: extraClass } = Astro.props;
+
+// Vertical center of the arc control points, expressed as a fraction of height.
+// Negative → control point is ABOVE the baseline (arcs open upward, wave-like).
+const archDepth = height * 0.55;
+const h = height;
+---
+
+<svg
+  aria-hidden="true"
+  role="presentation"
+  xmlns="http://www.w3.org/2000/svg"
+  width="100%"
+  height={h}
+  viewBox={`0 0 1200 ${h}`}
+  preserveAspectRatio="xMidYMid meet"
+  style={`opacity:${opacity};`}
+  class:list={['signal-wave', extraClass]}
+>
+  <!--
+    Three concentric arcs that sweep the full width.
+    The control point is ABOVE start/end (negative Y offset in viewBox space
+    where Y increases downward), so the arcs bow upward — matching the logo's
+    outward-radiating waves when viewed from the side.
+  -->
+
+  <!-- Outer arc — widest, lowest opacity -->
+  <path
+    d={`M-20,${h} Q600,${h - archDepth * 1.4} 1220,${h}`}
+    stroke="var(--brand)"
+    stroke-width="1"
+    fill="none"
+    stroke-linecap="round"
+    opacity="0.4"
+  />
+
+  <!-- Mid arc -->
+  <path
+    d={`M60,${h} Q600,${h - archDepth * 1.1} 1140,${h}`}
+    stroke="var(--brand)"
+    stroke-width="1.4"
+    fill="none"
+    stroke-linecap="round"
+    opacity="0.65"
+  />
+
+  <!-- Inner arc — closest, highest opacity -->
+  <path
+    d={`M160,${h} Q600,${h - archDepth * 0.75} 1040,${h}`}
+    stroke="var(--brand)"
+    stroke-width="1.8"
+    fill="none"
+    stroke-linecap="round"
+    opacity="0.9"
+  />
+</svg>
+
+<style>
+  .signal-wave {
+    display: block;
+    /* Never let this element attract focus or pointer events */
+    pointer-events: none;
+    user-select: none;
+  }
+
+  /* Honour the user's motion preference.  The SVG is static by default, so
+     this block is a defensive guard for any future animation addition. */
+  @media (prefers-reduced-motion: reduce) {
+    .signal-wave * {
+      animation: none !important;
+      transition: none !important;
+    }
+  }
+</style>
