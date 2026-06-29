@@ -4,12 +4,11 @@
 // Scans the built dist/ for HTML files and asserts:
 //   1. No href or src attribute points at a root-absolute path that LACKS the base prefix
 //      (i.e., /blog instead of /wisco-radio-labs-website/blog). These 404 on GH Pages.
-//   2. No internal asset src (not http/https/data/blob) points to a non-existent file in dist/.
-//   3. Every aria-labelledby and aria-describedby value resolves to an existing id on the page.
-//   4. Exactly one <h1> per page.
-//   5. No heading-level skips (h1→h3 without an intervening h2, etc.).
+//   2. Every aria-labelledby and aria-describedby value resolves to an existing id on the page.
+//   3. Exactly one <h1> per page.
+//   4. No heading-level skips (h1→h3 without an intervening h2, etc.).
+//   5. No draft: true post leaks into any dist/blog/<slug>/ directory.
 //   6. No draft: true post leaks into dist/rss.xml.
-//   7. No draft: true post leaks into any dist/blog/<slug>/ directory (pre-existing gate).
 //
 // Run after `npm run build`:
 //   npm run test:links

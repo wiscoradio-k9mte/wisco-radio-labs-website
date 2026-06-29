@@ -185,7 +185,8 @@ const isPlaceholder = WEB3FORMS_KEY === 'PLACEHOLDER_WEB3FORMS_KEY';
           'contact-message': 'Please enter a message.',
         };
         showError(target.id, messages[target.id] ?? 'This field is required.');
-      } else if (target.type === 'email' && !target.value.includes('@')) {
+      } else if (target.type === 'email' && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(target.value)) {
+        // Require at least local@domain.tld — honest minimum before server validates further.
         showError('contact-email', 'Enter a valid email address.');
       } else {
         clearError(target.id);
@@ -209,7 +210,8 @@ const isPlaceholder = WEB3FORMS_KEY === 'PLACEHOLDER_WEB3FORMS_KEY';
         showError('contact-name', 'Please enter your name.');
         firstError ??= document.getElementById('contact-name');
       }
-      if (!email || !email.includes('@')) {
+      if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        // Same check as blur handler: require local@domain.tld minimum.
         showError('contact-email', 'Enter a valid email address.');
         firstError ??= document.getElementById('contact-email');
       }
