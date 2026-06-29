@@ -30,7 +30,7 @@ It's fully offline. Free. Open source under GPL-3.0-or-later.
 snap install wr-cw-trainer
 ```
 
-Windows, macOS, and mobile are on the roadmap, in that order. Linux first because that's where I am and where I can ship quickly and actually test.
+It's live on Linux via the Snap Store, and nailing that desktop build is my focus right now. The real next step is mobile — Android and Apple. On Windows or Mac? It's open source, so you can clone the repo and run it from source — I'm not chasing the app stores there.
 
 ## What this site is for
 
