@@ -36,7 +36,7 @@ Windows, macOS, and mobile are on the roadmap, in that order. Linux first becaus
 
 This is the bench log. I'll write here about what I'm building, how it's going, and what I got wrong the first time — which, if the CW thing is any indication, will be a recurring feature.
 
-The Driftless Area of southwest Wisconsin is a specific place: old hills and river valleys, stubbornly themselves while the rest of the midwest was flattened and then sprawled. "Made in the Driftless" is partly geographic and partly an attitude. Build it well. Make it repairable. Show the work.
+Showing the work like that is a Driftless habit. The Driftless Area of southwest Wisconsin is a specific place — old hills and river valleys, stubbornly themselves while the rest of the midwest was flattened and then sprawled. "Made in the Driftless" is half geography, half attitude: build it well, make it repairable, show the work. The bench log is that last part.
 
 More projects are coming. I'll write about them here.
 
