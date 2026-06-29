@@ -2,10 +2,9 @@ name: Test & Build
 
 on:
   push:
-    # PREVIEW: triggers on feature/initial-build so Travis can verify the deployed site.
-    # After Travis approves and the branch merges, change this to:
-    #   branches: [main]
-    branches: [feature/initial-build]
+    # main is the canonical source — deploys the GitHub Pages preview.
+    # (Still a preview: noindex on, no custom domain yet. See PREVIEW_NOINDEX in src/consts.ts.)
+    branches: [main]
   workflow_dispatch: # allow manual runs
 
 permissions:
