@@ -1,8 +1,9 @@
 ---
 // About — Travis intro, background, why Wisco Radio Labs.
-// Photo slot is pending from Travis; branded placeholder is in place.
 import BaseLayout from '../layouts/BaseLayout.astro';
+import { Image } from 'astro:assets';
 import { withBase } from '../lib/link';
+import photo from '../assets/about-travis.png';
 ---
 <BaseLayout
   title="About"
@@ -12,24 +13,17 @@ import { withBase } from '../lib/link';
 
     <div class="about-layout">
 
-      <!-- Photo slot (4:5 portrait) -->
-      <!-- TODO: replace this placeholder with Travis's photo.
-           When adding the real photo:
-             1. Put the image file in src/assets/ (Astro optimizes it and handles the base path).
-             2. Import it and replace the placeholder div below with:
-                  <Image src={photo} alt="Travis Engh, K9MTE, in his workshop" width={400} height={500} ... />
-           One swap point, nothing else changes. -->
-      <div class="photo-slot" aria-label="Photo coming soon">
-        <div class="photo-placeholder">
-          <!-- Tower mark / brand icon -->
-          <svg aria-hidden="true" width="64" height="64" viewBox="0 0 24 24" fill="none"
-               stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M12 2L2 7l10 5 10-5-10-5z"/>
-            <path d="M2 17l10 5 10-5"/>
-            <path d="M2 12l10 5 10-5"/>
-          </svg>
-          <p class="photo-placeholder-label">Photo coming soon</p>
-        </div>
+      <!-- Photo: pre-masked transparent circle, so it floats on either theme background. -->
+      <div class="photo-slot">
+        <Image
+          src={photo}
+          alt="Travis Engh, K9MTE, at his workbench"
+          width={640}
+          height={640}
+          class="about-photo"
+          loading="eager"
+          decoding="async"
+        />
       </div>
 
       <!-- Text -->
@@ -111,36 +105,25 @@ import { withBase } from '../lib/link';
   /* Photo slot */
   .photo-slot {
     flex: 0 0 auto;
-    width: 70%;
-    max-width: 320px;
+    width: 66%;
+    max-width: 300px;
     align-self: center;
   }
 
   @media (min-width: 768px) {
     .photo-slot {
-      width: 38%;
+      width: 40%;
+      max-width: 320px;
       align-self: flex-start;
     }
   }
 
-  .photo-placeholder {
-    aspect-ratio: 4 / 5;
-    background: var(--surface-2);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-md);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: var(--space-4);
-    color: var(--brand);
-  }
-
-  .photo-placeholder-label {
-    font-size: var(--fs-caption);
-    color: var(--text-muted);
-    margin: 0;
-    text-align: center;
+  /* The PNG is already a transparent circle; border-radius is belt-and-suspenders. */
+  .about-photo {
+    width: 100%;
+    height: auto;
+    display: block;
+    border-radius: 50%;
   }
 
   /* Body */
