@@ -1,178 +1,73 @@
 # Project Brief — Wisco Radio Labs Website
 
-This file is the product's standing memory. The team reads it at the start of every
-engagement and tightens it at the end. Keep it terse and accurate; it is loaded each
-session, so narration costs tokens forever.
+Standing memory for the product. Loaded every session — keep it terse and accurate.
 
 ## What it is
-The public website for **Wisco Radio Labs (K9MTE)** — Travis Engh's ham-radio maker
-brand. Starts as primarily a **blog/vlog**: articles (and embedded videos) about what
-Travis is building and how he's trying to make new, exciting things for the ham-radio
-community. Five flat sections: **Home, Blog, Products, About, Contact**. The first
-product featured is the **CW Trainer** (see `../CW-Trainer/CLAUDE.md`). Tagline from the
-logo: *"Made in the Driftless."*
+Public website for **Wisco Radio Labs (K9MTE)** — Travis Engh's ham-radio maker brand.
+Primarily a **blog/vlog** (what he's building for the ham community), plus a Products page.
+Five flat sections: **Home, Blog, Products, About, Contact**. First product featured: the
+**CW Trainer** (facts: `../CW-Trainer/CLAUDE.md`). Tagline: *"Made in the Driftless."*
 
-## Product profile (the rules in force)
-- **Software-only, web** → **software doctrine** applies (modern/best-available; no
-  hardware parts-forever rules).
-- **Stack:** **Astro** (static-site generator) + **React islands** for the few
-  interactive pieces (dark/light toggle, embeds, any post filtering). Markdown/MDX
-  content collections for articles. Astro outputs static HTML — near-zero JS by default.
-- **Host:** **GitHub Pages** (static). Build/iterate on the free `*.github.io` preview
-  URL; a real domain is registered and wired **later, as a separate go-live step** —
-  deliberately decoupled so the build can be perfected first. No domain purchased yet.
-- **Authoring:** Travis writes posts as **Markdown files in the repo** (chosen over a
-  CMS UI for simplicity/control; a Git-based CMS UI like Decap/Sveltia can be added
-  later if Markdown gets old — noted, not built).
-- **Look:** **dark-first with a light toggle.** Palette from the logo — charcoal/near-
-  black field, warm **orange/amber** primary, gray accents. Modern, sleek.
-- **Mobile:** **built desktop-first, but mobile reading is the primary real-world use** —
-  most visitors read/scroll on phones. Mobile layout, typography, tap targets (≥48×48px),
-  and load speed are **acceptance criteria, not afterthoughts.** (Lesson from CW Trainer:
-  "responsive later" became desktop-only — not this time.)
-- **No user accounts / auth** — static content site, near-zero security surface. (See
-  [[website-security-accounts]]: accounts would need a managed identity service; not in scope.)
-- **Contact:** a contact **form** (free static-form service — **Web3Forms**, emails to Gmail —
-  GitHub Pages is static) **plus** email + social/QRZ links.
-- **Video ("vlog"):** **YouTube embeds** in posts (Travis hosts on YouTube; site embeds).
-- **Defaults set at intake:** RSS feed ON; lightweight privacy-friendly analytics ON;
-  blog **comments OFF** at launch (spam/moderation not worth it day one; addable later).
+## Profile (rules in force)
+- **Software-only web** → software doctrine.
+- **Stack: Astro 6 static → GitHub Pages.** Markdown content collections for posts. **Ships
+  zero JS bundles** — interactivity (theme toggle, mobile drawer, copy button, contact form)
+  is small inline/module scripts in plain `.astro`, NOT React. `@astrojs/react` was reserved
+  then **removed** (nothing used it); re-add only if a genuinely interactive island (e.g. a
+  blog tag filter) is ever built.
+- **Repo is PUBLIC** (free-plan Pages needs it; reversible). Served from a project sub-path
+  `/wisco-radio-labs-website/` — every link/asset MUST be base-path-safe (`withBase()` +
+  `src/lib/remark-rewrite-links.mjs` for Markdown). This is the #1 breakage risk; CI gates it.
+- **Deploys from `main`** via GH Actions (`.github/workflows/deploy.yml`; `github-pages` env
+  allows `main`). Still a **preview**: `PREVIEW_NOINDEX=true`, **no custom domain yet**.
+- **Look:** dark-first + light toggle (no-flash init), palette from the logo (charcoal +
+  amber). **Mobile reading is a first-class acceptance criterion**, not an afterthought.
+- **No accounts/auth** (near-zero security surface; [[website-security-accounts]]).
+- **Contact:** **Web3Forms** form (free; `WEB3FORMS_KEY` in `src/consts.ts`, emails to
+  `wiscoradio@gmail.com`) + mailto fallback + QRZ/YouTube/GitHub links. NOT Formspree.
+- **Vlog:** YouTube (`youtube.com/@Wisco-Radio-K9MTE`) — embeds via click-to-load facade.
+- RSS on; comments off; **analytics OFF until go-live**.
 
-## Design intent (grounded in research, 2026-06-28)
-Reference point: K4SWL's **qrper.com**, but *more modern and easier to navigate* — beat
-its WordPress-era density. Avoid the heavy widget sidebar (search + long category lists +
-archives + affiliate boxes) and category sprawl. Instead:
-- 5 flat nav items; mobile = clean header + "Menu" drawer.
-- Lead with clean post cards + strong featured images; let articles breathe (generous
-  whitespace ≈ +20% comprehension; ~65–75 char measure; large readable type).
-- One uncluttered place for categories/search, not a wall of widgets.
-- Speed as a feature (Astro static) — the retention edge on phones.
+## Architecture & tooling
+- `npm run dev` / `build` (runs `astro check` — must pass) / `preview` / `test` (vitest, 12).
+- **`npm run test:links`** = the CI gate (`scripts/check-links.mjs`): base-path leaks,
+  draft-in-`dist`, draft-in-RSS, `aria-labelledby` id resolution, single-`<h1>`, no
+  heading-skips — all proven to bite. CI job "Test & Build" runs build+test+links then deploys.
+- Config/seams: `src/consts.ts` (WEB3FORMS_KEY, CONTACT_EMAIL, SOCIAL_LINKS, ANALYTICS_ENABLED,
+  PREVIEW_NOINDEX), `src/lib/link.ts` (`withBase`), brand assets via
+  `scripts/generate-brand-assets.mjs` (OG card `public/og-default.png`, favicons, manifest).
+- Design/intent docs: `docs/architecture.md`, `design-system.md`, `layouts.md`,
+  `website-marketing-plan.md`, `copy-voice-pass.md`, **`voice-style-guide.md`**.
+- Known: harmless `markdown.remarkPlugins` deprecation warning on build (Astro 6) — migrate
+  `remark-rewrite-links` to the `@astrojs/markdown-remark` API someday; not breaking.
 
-## Products page — CW Trainer (first entry)
-Cover: what it is, where to find it (`snap install wr-cw-trainer`), how to use it now,
-and future plans. May reuse the CW Trainer **banner + screenshots** as assets. CW Trainer
-is 🟢 LIVE on the Snap Store at v2.3.0. Source of truth for facts: `../CW-Trainer/CLAUDE.md`.
+## Status (2026-06-29) — v1 COMPLETE, MERGED TO MAIN, preview LIVE (noindex), domain pending
+Built architect→web-designer→implementer→**test-qa**; **marketing engaged** for the site
+(plan + Tier-1 brand assets + voice guide); **two full all-team review rounds** (4 expert lanes
++ diverse 5-persona UAT panel each) + two fix batches. **Verdict READY, zero blockers;** all
+findings fixed & re-gated. Merged `feature/initial-build` → `main` (PR #1) and deploying from
+main; live preview verified (all routes 200, base-path clean, `noindex` on). Panel showed the
+gloss pass worked (reachable newcomers rose: Tariq 3→4, Hassan 2→3; expert ham 4/5 throughout).
 
-## About page
-Intro to Travis + background + why he started Wisco Radio Labs. **Travis will supply a
-photo** (pending). **Background arc (confirmed 2026-06-29):** military maintenance/systems work
-→ **software engineer** → **information security engineer** — and that software/infosec career is
-what pulled him into ham radio (a love of building hardware + the software that runs it). This
-arc is now in the About bio. Brand: that discipline + maker's instinct; "Made in the Driftless."
+## Durable decisions
+- **Marketing IS in scope for owned brand surfaces** (the site markets the brand/person, not an
+  unshipped product); brand-truth gate governs all copy; **external publishing still waits** for
+  Travis's explicit launch go. [[feedback-marketing-owned-surfaces]]
+- **`voice-style-guide.md` is THE copy reference** (plain first-person, specific, dry, Driftless;
+  derived from Travis's fiction — kept private, NOT in repo). **Language line:** brand pages =
+  ZERO profanity; blog = occasional earned mild salt (no f-bombs/slurs, never in titles/leads).
+- **Imagery: real photos + buildable graphics, NO AI** (authenticity for the ham audience).
+- About bio reflects Travis's arc: military maintenance → software engineer → information
+  security → ham radio (the infosec/software work is what pulled him in).
 
-## Assets
-- Logo: dark circular badge — "WISCO RADIO LABS" in orange, radio tower, "MADE IN THE
-  DRIFTLESS." (Provided 2026-06-28.) Palette anchor for the whole site.
-- CW Trainer banner + screenshots: reuse from `../CW-Trainer/`.
-- About photo: pending from Travis.
-
-## Tooling & gates (to establish at scaffold/build)
-- Astro project: `npm run dev`, `npm run build` (must pass), `npm run preview`.
-- Tests/lint TBD by the team (the **test-qa-engineer** gate still applies — content site,
-  so gate = build passes, links valid, a11y/contrast for both themes, mobile layout holds,
-  Lighthouse mobile healthy).
-- Deploy: GitHub Actions → GitHub Pages (set up at build time).
-
-## Current status (2026-06-29) — v1 BUILT + GATED, PREVIEW LIVE, awaiting Travis's review
-Full team flow done: architect → web-designer → implementer → **test-qa PASS** (gate bit:
-caught a non-biting draft test + a vacuous link test, both fixed). Astro 6 static site, all
-5 sections, dark/light w/ no-flash init, mobile-first reading, seed post, CW Trainer product
-page (real banner + screenshots), Web3Forms contact form, RSS+sitemap. 12 unit tests + a
-`test:links` base-path/draft gate wired into CI. **Live preview:**
-https://wiscoradio-k9mte.github.io/wisco-radio-labs-website/ (verified HTTP 200 on all routes,
-base-path clean, `noindex` on).
-- **Repo is PUBLIC** (Travis's call 2026-06-29 — free-plan Pages needs public for a private
-  repo to deploy; reversible). `PREVIEW_NOINDEX=true` keeps it out of search until go-live.
-- Deploys from **`feature/initial-build`** via GH Actions (env branch-policy allows it). Flip
-  the workflow trigger + `github-pages` env to `main` after Travis approves and it merges.
-- **NOT merged to main** — main holds only the scaffold; the built site is the feature branch
-  pending Travis's review (branch discipline: main blessed only after his approval, via PR).
-- Manager decisions on record: theme toggle/drawer are plain `.astro`+module scripts (NOT React
-  islands — no-flash init can't be an island; @astrojs/react installed, reserved for a future
-  tag filter); analytics OFF until domain go-live.
-
-## Marketing engagement (2026-06-29) — Travis brought the marketing team IN for the website
-Policy refinement (Travis's call): marketing **IS in scope for owned brand surfaces** (the site
-markets the brand/person/mission, not an unshipped product). Brand-truth gate still governs all
-of it; active EXTERNAL publishing of a product still waits for explicit launch go. See
-[[feedback-marketing-owned-surfaces]]. Done this session:
-- **Marketing plan** (`docs/website-marketing-plan.md`, brand-truth PASS): positioning = "one
-  ham, K9MTE, building honest open-source tools in the open, from the Driftless — a workbench
-  with the door open." Imagery decision: **real photos + buildable graphics, NO AI** (Travis's
-  choice; team recommended it — AI-slop reads inauthentic to hams). FCC 97.1 framed spirit-of only.
-- **Tier-1 brand assets built** (additive, gated build/test/links green): `public/og-default.png`
-  1200×630 social/OG share-card (SVG→PNG via sharp; system font, not Space Grotesk — future polish),
-  favicon/app-icon set (`public/icons/`) + `site.webmanifest`, JSON-LD (Org/WebSite + per-post
-  BlogPosting via a `head` slot), RSS polish, `SignalWave.astro` motif, post-card + blog empty-state
-  brand fallbacks. Asset generator: `scripts/generate-brand-assets.mjs`.
-- **Copy voice-pass APPLIED** (`docs/copy-voice-pass.md`, brand-truth PASS, Travis-approved):
-  removed the **"transceivers" overclaim** (manager-introduced, gate caught it) → operator-
-  differentiator + "more projects in progress"; **added IOTA** to CW Trainer QSO modes (product
-  page + seed post) as "SOTA and IOTA contacts"; About/empty-state voice polish. Live + verified.
-- **Brand voice guide** (`docs/voice-style-guide.md`) — THE standing reference for all copy/blog.
-  Derived from Travis's own fiction (kept private, NOT in repo): plain first-person, specific to
-  proper nouns, dry understated humor, Driftless reverence, "build it well / make it repairable /
-  show the work." **Language line (Travis 2026-06-29):** brand pages (Home/Products/About/Contact)
-  = ZERO profanity; **blog** = a little earned mild salt OK (hell/damn/ass/crap level), never
-  f-bombs/slurs, never gratuitous, never in titles/headings/opening lines. Gate enforces by surface.
-
-## What v1 must prove
-A fast, modern, **genuinely pleasant-to-read-on-a-phone** site with the five sections in
-place: a working Home, a Blog that renders Markdown articles well (with at least **one
-seed post** so it isn't empty), a CW Trainer Products page, an About page (photo pending),
-and a working Contact form — dark-first with a clean light toggle, on the `*.github.io`
-preview, ready for a domain when Travis is.
-
-## Full once-over review + fix batch (2026-06-29) — DONE, live + verified
-Ran the whole team read-only: test-qa, web-designer (a11y), security-engineer, brand-truth + a
-**diverse 5-persona UAT panel** (Travis's lens choice). Verdict was READY-WITH-FIXES. Then fixed
-**blockers + cheap majors** (Travis's scope) and re-gated brand-truth PASS. Key outcomes:
-- **Two factual blockers fixed:** learning order now LEARN→KEY→COPY→QSO (Travis caught it; panel
-  did NOT — synthetic UAT has no ground truth for app facts); false "audio input" claim replaced
-  with the truth (on-screen paddle / keyboard / VBand-style USB adapter sending `[`/`]`).
-- **Light-theme contrast blocker fixed:** `.eyebrow` → `--brand-ink` (was `--brand`, failed AA).
-- **Newcomer jargon:** Travis chose "light glosses, keep the voice" — CW/QSO/POTA/SOTA/IOTA/
-  ragchew/fist/73/Snap/Driftless glossed first-use, in voice. (Panel split: expert ham 4/5 trust↑;
-  newcomers 2–3/5 hit a jargon wall — the gloss pass addresses it.)
-- **Contact = Web3Forms** (NOT Formspree — Travis avoided it; Web3Forms free, no cost). Real key
-  live, emails to `wiscoradio@gmail.com`; mailto fallback if key unset. `WEB3FORMS_KEY` typed
-  `string` so the fallback check passes `astro check`.
-- Honest tag labels (no dead filters); Linux-only note; GitHub source link; About/Products body
-  → `--text`; home `<h2>` heading fix; GPL-3.0-or-later; SOTA chase; "tools". **YouTube live:**
-  `youtube.com/@Wisco-Radio-K9MTE` ("K9MTE (Travis)", verified resolves).
-- check-links now also gates aria-id resolution, single-h1, heading-skips, RSS drafts (all bite).
-
-## Second full review (2026-06-29) — verdict READY; punch list is ALL MINOR
-After the fix batch + 8 polish minors, ran the complete team again (4 expert lanes + diverse 5-persona
-panel re-run on the fixed site). **No blockers anywhere; all review-1 blockers + polish fixes confirmed
-closed; gates green + biting; no regressions.** Expert verdicts: QA READY/PASS (React fully removed — zero
-JS bundles, ~5KB inline/page); design/a11y READY (AA both themes verified); security SIGN-OFF (Web3Forms
-key = non-finding; go-live config list stands); brand-truth PASS. **Panel deltas (1st→2nd): Tariq 3→4,
-Hassan 2→3 (glosses landed for reachable newcomers), Walt 4→4, Gene 3→3 (qualitatively better), Bex 2→2
-(audience-fit).** Open punch list (all minor, Travis to choose in the morning whether to fix before/after
-a push-to-main):
-- **Gloss-pass v2** (extends the light-gloss decision): QRZ never glossed (every newcomer hit it); "73"
-  unglossed on the contact success message; "the Driftless" unglossed in footer/non-home; cut the
-  developer-ism "store facade / pure React and Web Audio" from the PRODUCT page; the raw `snap install`
-  on the HOME teaser reads too technical for a newcomer; small glosses (de, K9MTE=callsign, activations,
-  simplify "GPL-3.0-or-later" → "free & open source").
-- **IOTA consistency:** it's in "What it is" + blog but missing from how-to step 5 (Walt + brand-truth);
-  IOTA IS in the app (`buildIota`) → add it to step 5; tighten "activations" wording.
-- **Tags still read tappable** (Bex, Tariq, design): make ALL decorative tags fully plain incl. PostCard
-  hover (or build the filter island — but that re-adds React; plain-label is the cheaper call).
-- **Tiny nits:** redundant aria on field errors; redundant sr-only span on toggle; silent clipboard-fail.
-- **Nice-to-haves** (Tariq/Walt): snapd prereq note, system-requirements line, "back to blog" link,
-  "VBand"→"USB Morse key adapter (such as VBand)", blog code-block copy button, contact response-time.
-- **Needs Travis:** About photo; an honest line about whether he actually operates CW on the air
-  (Walt + brand-truth both want it — closes the "operator who actually uses them" loop, only if true).
-
-## Open decisions / pending from Travis
-- **About-page photo** — branded placeholder in place; one-line swap when Travis supplies it.
-- Real article content (Travis writes over time; one seed post shipped).
-- **Deferred polish** (reviewed, not done — Travis's call to pick up): theme-color follows OS not
-  toggle; drawer slide animation; clipboard AT live-region; weak email regex; ~193KB unused React
-  JS in build; remark-plugin unit tests; the analytics HTML comment in `<head>` (cosmetic).
-- Domain + go-live sequence (deferred): set `site`+drop `base`, add `public/CNAME`, flip
-  `PREVIEW_NOINDEX=false`, wire analytics, switch deploy trigger/env to `main`, + security go-live
-  items (privacy disclosure, meta-CSP, Dependabot, SHA-pin action, enforce HTTPS).
-- Travis's mobile read-quality check on a real phone (his standing bar).
+## Open / pending
+- **Needs Travis:** About **photo** (placeholder slot in place); an honest line on whether he
+  **operates CW on the air** (expert ham + brand-truth both want it — only if true); real article
+  content over time (one seed post shipped).
+- **Go-live sequence (domain day):** register domain → set `site` + drop `base` in astro.config
+  + add `public/CNAME` + enforce HTTPS → flip `PREVIEW_NOINDEX=false` → enable Web3Forms
+  captcha/spam + **end-to-end form test** (submit → confirm it lands in Gmail) → wire analytics +
+  privacy note → add meta-CSP, Dependabot, SHA-pin the deploy action.
+- **Minor deferred:** remark-plugin/content-schema unit tests; blog code-block copy button;
+  screenshot lightbox; optional "activations/contacts" parallelism across surfaces.
+- Travis's real-phone read-quality check (his standing bar).
