@@ -32,7 +32,7 @@ logo: *"Made in the Driftless."*
   "responsive later" became desktop-only — not this time.)
 - **No user accounts / auth** — static content site, near-zero security surface. (See
   [[website-security-accounts]]: accounts would need a managed identity service; not in scope.)
-- **Contact:** a contact **form** (serverless form service, e.g. Formspree free tier —
+- **Contact:** a contact **form** (free static-form service — **Web3Forms**, emails to Gmail —
   GitHub Pages is static) **plus** email + social/QRZ links.
 - **Video ("vlog"):** **YouTube embeds** in posts (Travis hosts on YouTube; site embeds).
 - **Defaults set at intake:** RSS feed ON; lightweight privacy-friendly analytics ON;
@@ -77,7 +77,7 @@ arc is now in the About bio. Brand: that discipline + maker's instinct; "Made in
 Full team flow done: architect → web-designer → implementer → **test-qa PASS** (gate bit:
 caught a non-biting draft test + a vacuous link test, both fixed). Astro 6 static site, all
 5 sections, dark/light w/ no-flash init, mobile-first reading, seed post, CW Trainer product
-page (real banner + screenshots), Formspree contact form, RSS+sitemap. 12 unit tests + a
+page (real banner + screenshots), Web3Forms contact form, RSS+sitemap. 12 unit tests + a
 `test:links` base-path/draft gate wired into CI. **Live preview:**
 https://wiscoradio-k9mte.github.io/wisco-radio-labs-website/ (verified HTTP 200 on all routes,
 base-path clean, `noindex` on).
@@ -123,14 +123,32 @@ seed post** so it isn't empty), a CW Trainer Products page, an About page (photo
 and a working Contact form — dark-first with a clean light toggle, on the `*.github.io`
 preview, ready for a domain when Travis is.
 
-## Open decisions / pending from Travis (all isolated to src/consts.ts — one-line swaps)
-- **Formspree form ID** — create the form at formspree.io, paste ID into `FORMSPREE_ID`
-  (contact form is wired but posts to a PLACEHOLDER until then).
-- **About-page photo** — branded placeholder slot in place; swap at one point.
-- **Public contact email** — `CONTACT_EMAIL` empty; confirm if `wiscoradio@gmail.com` is it.
-- **YouTube channel URL** — `SOCIAL_LINKS.youtube` empty until Travis has one.
+## Full once-over review + fix batch (2026-06-29) — DONE, live + verified
+Ran the whole team read-only: test-qa, web-designer (a11y), security-engineer, brand-truth + a
+**diverse 5-persona UAT panel** (Travis's lens choice). Verdict was READY-WITH-FIXES. Then fixed
+**blockers + cheap majors** (Travis's scope) and re-gated brand-truth PASS. Key outcomes:
+- **Two factual blockers fixed:** learning order now LEARN→KEY→COPY→QSO (Travis caught it; panel
+  did NOT — synthetic UAT has no ground truth for app facts); false "audio input" claim replaced
+  with the truth (on-screen paddle / keyboard / VBand-style USB adapter sending `[`/`]`).
+- **Light-theme contrast blocker fixed:** `.eyebrow` → `--brand-ink` (was `--brand`, failed AA).
+- **Newcomer jargon:** Travis chose "light glosses, keep the voice" — CW/QSO/POTA/SOTA/IOTA/
+  ragchew/fist/73/Snap/Driftless glossed first-use, in voice. (Panel split: expert ham 4/5 trust↑;
+  newcomers 2–3/5 hit a jargon wall — the gloss pass addresses it.)
+- **Contact = Web3Forms** (NOT Formspree — Travis avoided it; Web3Forms free, no cost). Real key
+  live, emails to `wiscoradio@gmail.com`; mailto fallback if key unset. `WEB3FORMS_KEY` typed
+  `string` so the fallback check passes `astro check`.
+- Honest tag labels (no dead filters); Linux-only note; GitHub source link; About/Products body
+  → `--text`; home `<h2>` heading fix; GPL-3.0-or-later; SOTA chase; "tools". **YouTube live:**
+  `youtube.com/@Wisco-Radio-K9MTE` ("K9MTE (Travis)", verified resolves).
+- check-links now also gates aria-id resolution, single-h1, heading-skips, RSS drafts (all bite).
+
+## Open decisions / pending from Travis
+- **About-page photo** — branded placeholder in place; one-line swap when Travis supplies it.
 - Real article content (Travis writes over time; one seed post shipped).
-- Domain name + registration (deferred to go-live; not part of the build). At go-live: set
-  `site`+drop `base` in astro.config, add `public/CNAME`, flip `PREVIEW_NOINDEX=false`, wire
-  analytics, switch deploy trigger/env to `main`.
-- Travis's review feedback on look/feel + mobile read quality on a real phone (his bar).
+- **Deferred polish** (reviewed, not done — Travis's call to pick up): theme-color follows OS not
+  toggle; drawer slide animation; clipboard AT live-region; weak email regex; ~193KB unused React
+  JS in build; remark-plugin unit tests; the analytics HTML comment in `<head>` (cosmetic).
+- Domain + go-live sequence (deferred): set `site`+drop `base`, add `public/CNAME`, flip
+  `PREVIEW_NOINDEX=false`, wire analytics, switch deploy trigger/env to `main`, + security go-live
+  items (privacy disclosure, meta-CSP, Dependabot, SHA-pin action, enforce HTTPS).
+- Travis's mobile read-quality check on a real phone (his standing bar).
