@@ -87,7 +87,26 @@ base-path clean, `noindex` on).
   pending Travis's review (branch discipline: main blessed only after his approval, via PR).
 - Manager decisions on record: theme toggle/drawer are plain `.astro`+module scripts (NOT React
   islands — no-flash init can't be an island; @astrojs/react installed, reserved for a future
-  tag filter); analytics OFF until domain go-live; marketing stays dark (working copy by team).
+  tag filter); analytics OFF until domain go-live.
+
+## Marketing engagement (2026-06-29) — Travis brought the marketing team IN for the website
+Policy refinement (Travis's call): marketing **IS in scope for owned brand surfaces** (the site
+markets the brand/person/mission, not an unshipped product). Brand-truth gate still governs all
+of it; active EXTERNAL publishing of a product still waits for explicit launch go. See
+[[feedback-marketing-owned-surfaces]]. Done this session:
+- **Marketing plan** (`docs/website-marketing-plan.md`, brand-truth PASS): positioning = "one
+  ham, K9MTE, building honest open-source tools in the open, from the Driftless — a workbench
+  with the door open." Imagery decision: **real photos + buildable graphics, NO AI** (Travis's
+  choice; team recommended it — AI-slop reads inauthentic to hams). FCC 97.1 framed spirit-of only.
+- **Tier-1 brand assets built** (additive, gated build/test/links green): `public/og-default.png`
+  1200×630 social/OG share-card (SVG→PNG via sharp; system font, not Space Grotesk — future polish),
+  favicon/app-icon set (`public/icons/`) + `site.webmanifest`, JSON-LD (Org/WebSite + per-post
+  BlogPosting via a `head` slot), RSS polish, `SignalWave.astro` motif, post-card + blog empty-state
+  brand fallbacks. Asset generator: `scripts/generate-brand-assets.mjs`.
+- **Copy voice-pass APPLIED** (`docs/copy-voice-pass.md`, brand-truth PASS, Travis-approved):
+  removed the **"transceivers" overclaim** (manager-introduced, gate caught it) → operator-
+  differentiator + "more projects in progress"; **added IOTA** to CW Trainer QSO modes (product
+  page + seed post) as "SOTA and IOTA contacts"; About/empty-state voice polish. Live + verified.
 
 ## What v1 must prove
 A fast, modern, **genuinely pleasant-to-read-on-a-phone** site with the five sections in
