@@ -112,16 +112,13 @@ const allTags = [...new Set(allPosts.flatMap(p => p.data.tags))].sort();
     margin-right: var(--space-1);
   }
 
-  /* tag-label mirrors the .tag visual but without hover/transition — it's not a control */
+  /* tag-label: plain muted text, no pill shape — scanners read "label" not "button" */
   .tag-label {
     display: inline-flex;
     align-items: center;
-    padding: var(--space-1) var(--space-3);
-    background-color: var(--surface-2);
-    color: var(--text-secondary);
+    color: var(--text-muted);
     font-size: var(--fs-caption);
     font-family: var(--font-body);
-    border-radius: var(--radius-pill);
   }
 
   .posts-grid {

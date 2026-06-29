@@ -6,6 +6,7 @@ import { Image } from 'astro:assets';
 import BaseLayout from './BaseLayout.astro';
 import FormattedDate from '../components/FormattedDate.astro';
 import YouTubeEmbed from '../components/YouTubeEmbed.astro';
+import { withBase } from '../lib/link';
 interface Props {
   title: string;
   description: string;
@@ -98,12 +99,18 @@ const postSchema = JSON.stringify({
         <div class="article-tags">
           <hr />
           <div class="article-tags-list">
+            <span class="article-tags-label">Tagged:</span>
             {tags.map(tag => (
-              <span class="tag tag--plain">{tag}</span>
+              <span class="tag">{tag}</span>
             ))}
           </div>
         </div>
       )}
+
+      <!-- Back link — readers who land deep-linked have no path onward without this. -->
+      <p class="back-link-wrap">
+        <a href={withBase('/blog/')}>&#8592; All posts</a>
+      </p>
     </div>
   </article>
 </BaseLayout>
@@ -171,13 +178,19 @@ const postSchema = JSON.stringify({
   .article-tags-list {
     display: flex;
     flex-wrap: wrap;
+    align-items: center;
     gap: var(--space-2);
   }
 
-  /* Plain variant: same visual as .tag but no hover/transition — not a control */
-  .tag--plain:hover {
-    background-color: var(--surface-2);
+  .article-tags-label {
+    font-size: var(--fs-caption);
+    font-weight: 500;
     color: var(--text-secondary);
-    cursor: default;
+    margin-right: var(--space-1);
+  }
+
+  .back-link-wrap {
+    margin-top: var(--space-8);
+    font-size: var(--fs-small);
   }
 </style>
