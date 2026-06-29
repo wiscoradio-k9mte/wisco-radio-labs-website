@@ -1,0 +1,71 @@
+---
+// BaseHead.astro — all <head> meta, SEO, canonical, OG, RSS, sitemap links.
+// Every URL emitted here is built from Astro.site + Astro.url to be absolute and base-aware.
+// A hard-coded '/...' path 404s on a project-page site — so nothing is hard-coded.
+import { SITE_TITLE, SITE_DESCRIPTION, ANALYTICS_ENABLED } from '../consts';
+import { withBase } from '../lib/link';
+import '../styles/global.css';
+
+interface Props {
+  title: string;
+  description?: string;
+  image?: string; // absolute URL for og:image
+}
+
+const { title, description = SITE_DESCRIPTION, image } = Astro.props;
+
+// Build an absolute OG image URL. Public assets need the base path prepended.
+const siteOrigin = Astro.site?.origin ?? '';
+const ogImage = image ?? `${siteOrigin}${withBase('/og-default.png')}`;
+
+// Canonical URL: Astro.url already includes site + base + current path.
+const canonicalURL = Astro.url.href;
+
+const pageTitle = title === SITE_TITLE ? title : `${title} — ${SITE_TITLE}`;
+---
+
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+<title>{pageTitle}</title>
+<meta name="description" content={description} />
+<link rel="canonical" href={canonicalURL} />
+
+<!-- Favicon — base-path-aware via withBase() -->
+<link rel="icon" type="image/svg+xml" href={withBase('/favicon.svg')} />
+
+<!-- RSS + sitemap alternate links -->
+<link
+  rel="alternate"
+  type="application/rss+xml"
+  title={`${SITE_TITLE} RSS feed`}
+  href={withBase('/rss.xml')}
+/>
+
+<!-- Open Graph -->
+<meta property="og:type" content="website" />
+<meta property="og:url" content={canonicalURL} />
+<meta property="og:title" content={pageTitle} />
+<meta property="og:description" content={description} />
+<meta property="og:image" content={ogImage} />
+
+<!-- Twitter Card -->
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content={pageTitle} />
+<meta name="twitter:description" content={description} />
+<meta name="twitter:image" content={ogImage} />
+
+<!-- theme-color: match the active theme's --bg.
+     The inline theme script in BaseLayout sets data-theme before this, so the meta reflects
+     the right value on the first paint. JS updates it on toggle. -->
+<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0F1115" />
+<meta name="theme-color" media="(prefers-color-scheme: light)" content="#F7F4EF" />
+
+<!--
+  Analytics insertion point (currently disabled — ANALYTICS_ENABLED = false in consts.ts).
+  When ready:
+    1. Set ANALYTICS_ENABLED = true in src/consts.ts
+    2. Add the vendor <script> tag inside the {ANALYTICS_ENABLED && (...)} block below.
+  Analytics vendor is an open decision — not wired until Travis picks one at domain go-live.
+-->
+{ANALYTICS_ENABLED && null /* replace null with the vendor <script> element */}

@@ -1,0 +1,368 @@
+---
+// ContactForm.astro — static Formspree form. No JS required for submission.
+// Validation is HTML5 native + JS-enhanced (JS validates on blur, enhances error messages).
+// Replace FORMSPREE_ID in consts.ts with the real form ID to enable submissions.
+import { FORMSPREE_ID, CONTACT_EMAIL } from '../consts';
+
+const formAction = `https://formspree.io/f/${FORMSPREE_ID}`;
+const isPlaceholder = FORMSPREE_ID === 'PLACEHOLDER_FORM_ID';
+---
+
+{isPlaceholder && (
+  <div class="form-notice" role="note">
+    Contact form not yet wired — set <code>FORMSPREE_ID</code> in <code>src/consts.ts</code>.
+    {CONTACT_EMAIL && (
+      <> Until then, <a href={`mailto:${CONTACT_EMAIL}`}>email directly</a>.</>
+    )}
+  </div>
+)}
+
+<form
+  class="contact-form"
+  action={formAction}
+  method="POST"
+  novalidate
+  data-formspree
+>
+  <!-- Formspree honeypot for spam (hidden from real users, visible to bots) -->
+  <div class="honeypot" aria-hidden="true">
+    <label for="hp-name">Leave this empty</label>
+    <input type="text" id="hp-name" name="_gotcha" tabindex="-1" autocomplete="off" />
+  </div>
+
+  <!-- Redirect after Formspree submit (optional; Formspree shows its own thank-you by default) -->
+  <!-- <input type="hidden" name="_next" value={withBase('/contact/?thanks')} /> -->
+
+  <div class="form-field">
+    <label class="form-label" for="contact-name">
+      Name <span class="form-required">(required)</span>
+    </label>
+    <input
+      class="form-input"
+      type="text"
+      id="contact-name"
+      name="name"
+      required
+      aria-required="true"
+      autocomplete="name"
+      placeholder="Your name"
+    />
+    <p class="form-error" id="contact-name-error" role="alert" aria-live="polite" hidden>
+      Please enter your name.
+    </p>
+  </div>
+
+  <div class="form-field">
+    <label class="form-label" for="contact-email">
+      Email <span class="form-required">(required)</span>
+    </label>
+    <input
+      class="form-input"
+      type="email"
+      id="contact-email"
+      name="email"
+      required
+      aria-required="true"
+      autocomplete="email"
+      placeholder="your@email.com"
+    />
+    <p class="form-error" id="contact-email-error" role="alert" aria-live="polite" hidden>
+      Enter a valid email address.
+    </p>
+  </div>
+
+  <div class="form-field">
+    <label class="form-label" for="contact-subject">Subject</label>
+    <input
+      class="form-input"
+      type="text"
+      id="contact-subject"
+      name="subject"
+      autocomplete="off"
+      placeholder="What's this about?"
+    />
+  </div>
+
+  <div class="form-field">
+    <label class="form-label" for="contact-message">
+      Message <span class="form-required">(required)</span>
+    </label>
+    <textarea
+      class="form-input form-textarea"
+      id="contact-message"
+      name="message"
+      required
+      aria-required="true"
+      rows="6"
+      placeholder="Your message…"
+    ></textarea>
+    <p class="form-error" id="contact-message-error" role="alert" aria-live="polite" hidden>
+      Please enter a message.
+    </p>
+  </div>
+
+  <!-- Status messages shown after submission attempt -->
+  <div class="form-status" id="form-success" role="status" hidden>
+    <p>Thanks — I'll get back to you. 73!</p>
+  </div>
+  <div class="form-status form-status--error" id="form-network-error" role="alert" hidden>
+    <p>
+      Something went wrong — please try again, or
+      {CONTACT_EMAIL
+        ? <> email me directly at <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>.</>
+        : ' reach out directly.'}
+    </p>
+  </div>
+
+  <button class="btn btn-primary form-submit" type="submit" id="form-submit-btn">
+    Send message
+  </button>
+</form>
+
+<script>
+  // Progressive enhancement: validate on blur + handle async submission.
+  // Form still works without JS (native HTML5 validation + Formspree redirect).
+  const form = document.querySelector<HTMLFormElement>('[data-formspree]');
+  if (form) {
+    const showError = (fieldId: string, message: string) => {
+      const input = document.getElementById(fieldId) as HTMLInputElement | null;
+      const errEl = document.getElementById(`${fieldId}-error`) as HTMLElement | null;
+      if (input && errEl) {
+        input.setAttribute('aria-invalid', 'true');
+        input.setAttribute('aria-describedby', `${fieldId}-error`);
+        input.classList.add('input--error');
+        errEl.textContent = message;
+        errEl.hidden = false;
+      }
+    };
+
+    const clearError = (fieldId: string) => {
+      const input = document.getElementById(fieldId) as HTMLInputElement | null;
+      const errEl = document.getElementById(`${fieldId}-error`) as HTMLElement | null;
+      if (input && errEl) {
+        input.removeAttribute('aria-invalid');
+        input.removeAttribute('aria-describedby');
+        input.classList.remove('input--error');
+        errEl.hidden = true;
+      }
+    };
+
+    // Validate on blur
+    form.addEventListener('blur', (e) => {
+      const target = e.target as HTMLInputElement;
+      if (!target?.id || !target?.required) return;
+      if (target.value.trim() === '') {
+        const messages: Record<string, string> = {
+          'contact-name': 'Please enter your name.',
+          'contact-email': 'Enter a valid email address.',
+          'contact-message': 'Please enter a message.',
+        };
+        showError(target.id, messages[target.id] ?? 'This field is required.');
+      } else if (target.type === 'email' && !target.value.includes('@')) {
+        showError('contact-email', 'Enter a valid email address.');
+      } else {
+        clearError(target.id);
+      }
+    }, true);
+
+    // Async submission
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      clearError('contact-name');
+      clearError('contact-email');
+      clearError('contact-message');
+
+      // Validate required fields
+      const name = (document.getElementById('contact-name') as HTMLInputElement)?.value.trim();
+      const email = (document.getElementById('contact-email') as HTMLInputElement)?.value.trim();
+      const message = (document.getElementById('contact-message') as HTMLTextAreaElement)?.value.trim();
+      let firstError: HTMLElement | null = null;
+
+      if (!name) {
+        showError('contact-name', 'Please enter your name.');
+        firstError ??= document.getElementById('contact-name');
+      }
+      if (!email || !email.includes('@')) {
+        showError('contact-email', 'Enter a valid email address.');
+        firstError ??= document.getElementById('contact-email');
+      }
+      if (!message) {
+        showError('contact-message', 'Please enter a message.');
+        firstError ??= document.getElementById('contact-message');
+      }
+
+      if (firstError) {
+        firstError.focus();
+        return;
+      }
+
+      const btn = document.getElementById('form-submit-btn') as HTMLButtonElement;
+      const success = document.getElementById('form-success') as HTMLElement;
+      const netError = document.getElementById('form-network-error') as HTMLElement;
+
+      btn.disabled = true;
+      btn.setAttribute('aria-busy', 'true');
+      btn.textContent = 'Sending…';
+      success.hidden = true;
+      netError.hidden = true;
+
+      try {
+        const resp = await fetch(form.action, {
+          method: 'POST',
+          headers: { Accept: 'application/json' },
+          body: new FormData(form),
+        });
+
+        if (resp.ok) {
+          form.reset();
+          success.hidden = false;
+          btn.textContent = 'Sent!';
+        } else {
+          netError.hidden = false;
+          btn.disabled = false;
+          btn.removeAttribute('aria-busy');
+          btn.textContent = 'Send message';
+        }
+      } catch {
+        netError.hidden = false;
+        btn.disabled = false;
+        btn.removeAttribute('aria-busy');
+        btn.textContent = 'Send message';
+      }
+    });
+  }
+</script>
+
+<style>
+  .form-notice {
+    padding: var(--space-4);
+    background: var(--surface-2);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-md);
+    font-size: var(--fs-small);
+    color: var(--text-secondary);
+    margin-bottom: var(--space-6);
+  }
+
+  .contact-form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
+  }
+
+  /* Honeypot — off screen, invisible to real users */
+  .honeypot {
+    position: absolute;
+    left: -9999px;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+  }
+
+  .form-field {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+  }
+
+  .form-label {
+    font-size: var(--fs-small);
+    font-weight: 500;
+    color: var(--text);
+  }
+
+  .form-required {
+    font-weight: 400;
+    color: var(--text-muted);
+  }
+
+  .form-input {
+    min-height: 48px;
+    padding: var(--space-3);
+    background: var(--surface-2);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-sm);
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: var(--fs-body);
+    transition: border-color 150ms ease, outline 150ms ease;
+    width: 100%;
+  }
+
+  .form-input::placeholder {
+    color: var(--text-muted);
+  }
+
+  .form-input:hover {
+    border-color: var(--text-muted);
+  }
+
+  .form-input:focus {
+    outline: 3px solid var(--focus-ring);
+    outline-offset: 0;
+    border-color: var(--brand);
+  }
+
+  .form-input.input--error {
+    border-color: var(--error);
+  }
+
+  .form-textarea {
+    min-height: 140px;
+    resize: vertical;
+    line-height: 1.6;
+  }
+
+  .form-error {
+    font-size: var(--fs-small);
+    color: var(--error);
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+  }
+
+  .form-error::before {
+    content: '!';
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--error);
+    color: white;
+    font-weight: 700;
+    font-size: 11px;
+    flex-shrink: 0;
+  }
+
+  .form-status {
+    padding: var(--space-4);
+    border-radius: var(--radius-md);
+    background: color-mix(in srgb, var(--success) 15%, transparent);
+    border: 1px solid var(--success);
+    color: var(--success);
+    font-size: var(--fs-small);
+  }
+
+  .form-status p { margin: 0; }
+
+  .form-status--error {
+    background: color-mix(in srgb, var(--error) 12%, transparent);
+    border-color: var(--error);
+    color: var(--error);
+  }
+
+  .form-submit {
+    align-self: flex-start;
+    width: 100%;
+  }
+
+  @media (min-width: 480px) {
+    .form-submit {
+      width: auto;
+      min-width: 180px;
+    }
+  }
+</style>

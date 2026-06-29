@@ -1,0 +1,102 @@
+---
+// Blog index — card list, sorted newest first.
+// Categories are shown as static chips (non-interactive in v1 — filtering is a future React island).
+// Draft exclusion is centralized here with the same filter used in [...slug].astro and rss.xml.js.
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import PostCard from '../../components/PostCard.astro';
+import { getCollection } from 'astro:content';
+
+const allPosts = (await getCollection('blog', ({ data }) =>
+  import.meta.env.PROD ? !data.draft : true
+)).sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
+
+// Collect unique tags for the filter row
+const allTags = [...new Set(allPosts.flatMap(p => p.data.tags))].sort();
+---
+<BaseLayout title="Blog" description="Articles and build logs from Wisco Radio Labs (K9MTE) — ham radio, Morse code, electronics, and life in the Driftless.">
+
+  <section class="section container">
+    <h1 class="page-title">Blog</h1>
+    <p class="page-lead">
+      Build logs, experiments, and notes from the bench. Ham radio, CW, and whatever else
+      I'm making in the Driftless.
+    </p>
+
+    <!-- Category chips (static in v1; React island tag filter is the future upgrade) -->
+    {allTags.length > 0 && (
+      <div class="filter-row" role="list" aria-label="Filter by tag">
+        {allTags.map(tag => (
+          <span class="tag" role="listitem">{tag}</span>
+        ))}
+      </div>
+    )}
+
+    <!-- Post grid -->
+    {allPosts.length > 0 ? (
+      <div class="posts-grid">
+        {allPosts.map(post => (
+          <PostCard
+            title={post.data.title}
+            description={post.data.description}
+            pubDate={post.data.pubDate}
+            href={`/blog/${post.id}/`}
+            heroImage={post.data.heroImage}
+            tags={post.data.tags}
+          />
+        ))}
+      </div>
+    ) : (
+      <div class="empty-state">
+        <p>No posts here yet. Check back soon, or <a href="/">read the latest</a>.</p>
+      </div>
+    )}
+  </section>
+
+</BaseLayout>
+
+<style>
+  .page-title {
+    font-size: var(--fs-h1);
+    margin: 0 0 var(--space-4);
+  }
+
+  .page-lead {
+    color: var(--text-secondary);
+    font-size: var(--fs-body);
+    max-width: 60ch;
+    margin: 0 0 var(--space-6);
+  }
+
+  .filter-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    margin-bottom: var(--space-6);
+  }
+
+  /* Tag chips are min 48px tall via padding so they're tappable even if they look small */
+  .filter-row .tag {
+    min-height: 48px;
+    display: inline-flex;
+    align-items: center;
+  }
+
+  .posts-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--space-5);
+  }
+
+  @media (min-width: 768px) {
+    .posts-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+
+  @media (min-width: 1024px) {
+    .posts-grid { grid-template-columns: repeat(3, 1fr); }
+  }
+
+  .empty-state {
+    padding: var(--space-10) 0;
+    color: var(--text-secondary);
+  }
+</style>

@@ -1,0 +1,379 @@
+---
+// Products page — CW Trainer detail.
+// v1: one product, so this IS the CW Trainer page. No product collection (YAGNI).
+// Facts are from ../CW-Trainer/CLAUDE.md — verified as of 2026-06-28.
+import { Image } from 'astro:assets';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import banner from '../../assets/cw-trainer/WiscoRadioLabs-Banner.png';
+import screenshotLearn from '../../assets/cw-trainer/WiscoRadioLabs-Learn.png';
+import screenshotKey from '../../assets/cw-trainer/WiscoRadioLabs-Key.png';
+import screenshotQSO from '../../assets/cw-trainer/WiscoRadioLabs-QSO.png';
+import screenshotCopy from '../../assets/cw-trainer/WiscoRadioLabs-Copy.png';
+---
+<BaseLayout
+  title="CW Trainer"
+  description="The Wisco Radio Labs CW Trainer — Koch-method Morse code lessons, copy and sending practice, QSO simulator. Live on the Snap Store at v2.3.0."
+>
+
+  <!-- Banner -->
+  <div class="product-banner-wrap">
+    <Image
+      src={banner}
+      alt="Wisco Radio Labs CW Trainer — banner"
+      width={1200}
+      height={400}
+      class="product-banner"
+      loading="eager"
+      decoding="async"
+    />
+  </div>
+
+  <div class="container product-content">
+
+    <!-- Header -->
+    <div class="product-header">
+      <p class="eyebrow">Wisco Radio Labs &middot; Product</p>
+      <h1 class="product-title">CW Trainer</h1>
+      <p class="product-lead">Learn Morse code the way hams actually use it.</p>
+      <p class="product-status">
+        <span class="status-dot" aria-hidden="true">&#x1F7E2;</span>
+        Live on the Snap Store &middot; v2.3.0 &middot; free &amp; open source (GPL-3.0)
+      </p>
+    </div>
+
+    <!-- Install card -->
+    <div class="install-card">
+      <p class="install-label">Get it (Linux):</p>
+      <div class="install-cmd-row">
+        <code class="install-cmd" id="install-cmd">snap install wr-cw-trainer</code>
+        <button
+          class="copy-btn"
+          type="button"
+          aria-label="Copy install command"
+          data-copy="snap install wr-cw-trainer"
+        >
+          <span class="copy-label">Copy</span>
+        </button>
+      </div>
+      <a
+        href="https://snapcraft.io/wr-cw-trainer"
+        class="btn btn-secondary snap-link"
+        rel="noopener noreferrer"
+        target="_blank"
+        aria-label="View CW Trainer on the Snap Store (opens in new tab)"
+      >
+        View on the Snap Store &rarr;
+      </a>
+    </div>
+
+    <!-- What it is -->
+    <section class="product-section" aria-labelledby="what-it-is">
+      <h2 id="what-it-is">What it is</h2>
+      <p>
+        The CW Trainer teaches Morse code the way radio operators actually use it — not by
+        memorizing dots and dashes on a chart, but by training your ear to recognize characters
+        directly. It uses the <strong>Koch method</strong>: start with just a couple of characters,
+        get good at them, then add more one at a time until you have the full alphabet.
+      </p>
+      <p>
+        Once you know the characters, the trainer moves to what matters on the air — copying
+        random text at speed (the <strong>COPY drill</strong>), and sending your own with a key
+        or paddle while the app grades your fist (the <strong>KEY drill</strong>). The <strong>QSO
+        simulator</strong> walks you through realistic exchanges: POTA activations, SOTA contacts,
+        and ragchew conversations.
+      </p>
+      <p>
+        It runs entirely offline — no network connection, no account, no tracking. It is free
+        and open source under the GPL-3.0 license.
+      </p>
+    </section>
+
+    <!-- Screenshot gallery -->
+    <section class="product-section" aria-labelledby="screenshots-heading">
+      <h2 id="screenshots-heading">A look inside</h2>
+      <div class="screenshot-gallery">
+        <figure class="screenshot-figure">
+          <Image
+            src={screenshotLearn}
+            alt="CW Trainer LEARN tab — Koch method character chart and current lesson"
+            width={640}
+            height={480}
+            class="screenshot-img"
+            loading="lazy"
+            decoding="async"
+          />
+          <figcaption>LEARN — Koch-method character lessons</figcaption>
+        </figure>
+        <figure class="screenshot-figure">
+          <Image
+            src={screenshotCopy}
+            alt="CW Trainer COPY tab — copy random text at speed drill"
+            width={640}
+            height={480}
+            class="screenshot-img"
+            loading="lazy"
+            decoding="async"
+          />
+          <figcaption>COPY — copy random text at speed</figcaption>
+        </figure>
+        <figure class="screenshot-figure">
+          <Image
+            src={screenshotKey}
+            alt="CW Trainer KEY tab — send with a key or paddle, graded fist feedback"
+            width={640}
+            height={480}
+            class="screenshot-img"
+            loading="lazy"
+            decoding="async"
+          />
+          <figcaption>KEY — sending practice with fist feedback</figcaption>
+        </figure>
+        <figure class="screenshot-figure">
+          <Image
+            src={screenshotQSO}
+            alt="CW Trainer QSO tab — realistic QSO simulator for POTA, SOTA, and ragchew"
+            width={640}
+            height={480}
+            class="screenshot-img"
+            loading="lazy"
+            decoding="async"
+          />
+          <figcaption>QSO — realistic contact simulator</figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <!-- How to use it -->
+    <section class="product-section" aria-labelledby="how-to-use">
+      <h2 id="how-to-use">How to use it now</h2>
+      <ol class="use-steps">
+        <li>
+          <strong>Install it.</strong> On Linux with Snap: <code>snap install wr-cw-trainer</code>.
+          Launch it from your application menu or run <code>wr-cw-trainer</code> in a terminal.
+        </li>
+        <li>
+          <strong>Start with LEARN.</strong> Open the LEARN tab. The Koch method starts you with
+          just K and M. Listen until they sound distinct, not spelled out. Pass the quiz, then
+          add the next character.
+        </li>
+        <li>
+          <strong>Build copy speed.</strong> Once you have a solid character set, switch to the
+          COPY drill. Random text at your target speed. Write down what you hear. Grade it.
+        </li>
+        <li>
+          <strong>Practice sending.</strong> Connect a straight key or paddle to your computer's
+          audio input (or use the on-screen paddle). The KEY drill listens to your sending and
+          grades your timing — a real fist check, not just "did you press the right key."
+        </li>
+        <li>
+          <strong>Try a QSO.</strong> The QSO simulator walks you through a realistic contact —
+          a POTA activation, a SOTA check-in, or a ragchew. Copy their side, transmit yours.
+          It is a simulation; every real QSO will be different. The goal is confidence.
+        </li>
+      </ol>
+    </section>
+
+    <!-- Where it's headed -->
+    <section class="product-section" aria-labelledby="roadmap">
+      <h2 id="roadmap">Where it's headed</h2>
+      <p>
+        The CW Trainer is live on Linux via the Snap Store. The roadmap — not a promise, but
+        an honest direction — is:
+      </p>
+      <ul>
+        <li><strong>Windows</strong> via the Microsoft Store</li>
+        <li><strong>macOS</strong> via the Mac App Store</li>
+        <li><strong>iOS and Android</strong> via Capacitor</li>
+      </ul>
+      <p>
+        The code is pure React and Web Audio with a store facade written for exactly this kind
+        of cross-platform extension. None of the above are available yet — they are where this
+        is going.
+      </p>
+    </section>
+
+  </div>
+</BaseLayout>
+
+<script>
+  // Copy-to-clipboard for the install command
+  document.querySelectorAll<HTMLButtonElement>('[data-copy]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const text = btn.dataset.copy ?? '';
+      const label = btn.querySelector('.copy-label');
+      try {
+        await navigator.clipboard.writeText(text);
+        if (label) {
+          label.textContent = 'Copied!';
+          setTimeout(() => { label.textContent = 'Copy'; }, 2000);
+        }
+      } catch {
+        // Clipboard API not available; silently ignore (the text is visible)
+      }
+    });
+  });
+</script>
+
+<style>
+  /* Banner */
+  .product-banner-wrap {
+    width: 100%;
+    max-height: 340px;
+    overflow: hidden;
+  }
+
+  .product-banner {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  /* Content */
+  .product-content {
+    padding-block: var(--space-10) var(--space-12);
+  }
+
+  .product-header {
+    margin-bottom: var(--space-8);
+  }
+
+  .product-title {
+    font-size: var(--fs-h1);
+    margin: 0 0 var(--space-3);
+  }
+
+  .product-lead {
+    font-size: var(--fs-h4);
+    color: var(--text-secondary);
+    line-height: 1.6;
+    margin: 0 0 var(--space-4);
+  }
+
+  .product-status {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-size: var(--fs-small);
+    color: var(--text-secondary);
+    margin: 0;
+  }
+
+  /* Install card */
+  .install-card {
+    background: var(--surface-1);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: var(--space-5);
+    margin-bottom: var(--space-8);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+    max-width: 540px;
+  }
+
+  .install-label {
+    font-size: var(--fs-small);
+    font-weight: 500;
+    color: var(--text-secondary);
+    margin: 0;
+  }
+
+  .install-cmd-row {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    flex-wrap: wrap;
+  }
+
+  .install-cmd {
+    font-family: var(--font-mono);
+    font-size: var(--fs-body);
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: var(--space-3) var(--space-4);
+    user-select: all;
+    flex: 1;
+  }
+
+  .copy-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 48px;
+    min-width: 80px;
+    padding: var(--space-2) var(--space-4);
+    background: var(--surface-2);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-sm);
+    color: var(--text-secondary);
+    font-family: var(--font-display);
+    font-size: var(--fs-small);
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 150ms ease, color 150ms ease;
+    flex-shrink: 0;
+  }
+
+  .copy-btn:hover { background: var(--brand-tint); color: var(--brand-ink); }
+  .copy-btn:focus-visible { outline: 3px solid var(--focus-ring); outline-offset: 2px; }
+
+  .snap-link { align-self: flex-start; }
+
+  /* Sections */
+  .product-section {
+    margin-bottom: var(--space-10);
+    max-width: var(--measure);
+  }
+
+  .product-section h2 {
+    margin-bottom: var(--space-5);
+  }
+
+  .product-section p {
+    color: var(--text-secondary);
+    line-height: 1.7;
+    margin-bottom: var(--space-4);
+  }
+
+  .product-section ul,
+  .product-section ol {
+    color: var(--text-secondary);
+    line-height: 1.7;
+    padding-left: var(--space-6);
+    margin-bottom: var(--space-5);
+  }
+
+  .product-section li { margin-bottom: var(--space-3); }
+
+  .use-steps { counter-reset: steps; }
+
+  /* Screenshots */
+  .screenshot-gallery {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--space-5);
+  }
+
+  @media (min-width: 640px) {
+    .screenshot-gallery { grid-template-columns: repeat(2, 1fr); }
+  }
+
+  .screenshot-figure {
+    margin: 0;
+  }
+
+  .screenshot-img {
+    width: 100%;
+    height: auto;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border);
+  }
+
+  .screenshot-figure figcaption {
+    text-align: center;
+    font-size: var(--fs-caption);
+    color: var(--text-muted);
+    margin-top: var(--space-2);
+  }
+</style>

@@ -1,0 +1,292 @@
+---
+// Home — hero, latest posts (top 3), featured product teaser
+import { Image } from 'astro:assets';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import PostCard from '../components/PostCard.astro';
+import { getCollection } from 'astro:content';
+import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
+import { withBase } from '../lib/link';
+import logo from '../assets/brand/wisco-radio-labs-logo.png';
+import banner from '../assets/cw-trainer/WiscoRadioLabs-Banner.png';
+
+// Draft posts are hidden in prod; visible in dev so Travis can preview WIP.
+const posts = (await getCollection('blog', ({ data }) =>
+  import.meta.env.PROD ? !data.draft : true
+)).sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
+
+const latestPosts = posts.slice(0, 3);
+---
+<BaseLayout title={SITE_TITLE} description={SITE_DESCRIPTION}>
+
+  <!-- ─── Hero ─────────────────────────────────────────── -->
+  <section class="hero section" aria-labelledby="hero-heading">
+    <div class="container hero-inner">
+      <!-- Text side (comes first in DOM = reading order) -->
+      <div class="hero-text">
+        <p class="eyebrow">Made in the Driftless</p>
+        <h1 id="hero-heading" class="hero-heading">
+          Ham radio, built in the open.
+        </h1>
+        <p class="hero-sub">
+          Wisco Radio Labs is a one-person ham-radio maker brand in southwest Wisconsin —
+          building CW trainers, transceivers, and tools for the amateur-radio community,
+          one project at a time.
+        </p>
+        <div class="hero-ctas">
+          <a href={withBase('/blog/')} class="btn btn-primary">Read the blog</a>
+          <a href={withBase('/products/')} class="btn btn-secondary">See the CW Trainer</a>
+        </div>
+      </div>
+      <!-- Logo badge (decorative — the wordmark above IS the text) -->
+      <div class="hero-logo" aria-hidden="true">
+        <Image
+          src={logo}
+          alt=""
+          width={260}
+          height={260}
+          class="hero-logo-img"
+          loading="eager"
+          decoding="async"
+        />
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── Latest posts ──────────────────────────────────── -->
+  <section class="posts-section section" aria-labelledby="latest-heading">
+    <div class="container">
+      <div class="section-header">
+        <p class="eyebrow">Latest from the bench</p>
+        <a href={withBase('/blog/')} class="section-all-link" aria-label="All blog posts">All posts &rarr;</a>
+      </div>
+
+      {latestPosts.length > 0 ? (
+        <div class="posts-grid">
+          {latestPosts.map(post => (
+            <PostCard
+              title={post.data.title}
+              description={post.data.description}
+              pubDate={post.data.pubDate}
+              href={`/blog/${post.id}/`}
+              heroImage={post.data.heroImage}
+              tags={post.data.tags}
+            />
+          ))}
+        </div>
+      ) : (
+        <p class="posts-empty">No posts yet — check back soon.</p>
+      )}
+    </div>
+  </section>
+
+  <!-- ─── Featured product teaser ──────────────────────── -->
+  <section class="product-teaser section" aria-labelledby="product-heading">
+    <div class="container">
+      <div class="product-teaser-inner">
+        <div class="product-teaser-image-wrap">
+          <Image
+            src={banner}
+            alt="Wisco Radio Labs CW Trainer banner"
+            width={900}
+            height={300}
+            class="product-teaser-image"
+            loading="lazy"
+            decoding="async"
+          />
+        </div>
+        <div class="product-teaser-body">
+          <p class="eyebrow">Featured project</p>
+          <h2 id="product-heading" class="product-teaser-title">CW Trainer</h2>
+          <p class="product-teaser-desc">
+            Learn Morse code the way hams actually use it — Koch-method lessons, copy and sending practice,
+            and a QSO simulator. Fully offline. Free and open source. On Linux now.
+          </p>
+          <p class="product-teaser-cmd"><code>snap install wr-cw-trainer</code></p>
+          <a href={withBase('/products/')} class="btn btn-primary">View the CW Trainer &rarr;</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</BaseLayout>
+
+<style>
+  /* ── Hero ── */
+  .hero {
+    background: var(--bg);
+  }
+
+  .hero-inner {
+    display: flex;
+    flex-direction: column-reverse;  /* logo on top on mobile */
+    align-items: center;
+    gap: var(--space-8);
+  }
+
+  @media (min-width: 1024px) {
+    .hero-inner {
+      flex-direction: row;
+      justify-content: space-between;
+      align-items: center;
+    }
+  }
+
+  .hero-text {
+    flex: 1;
+    max-width: 56ch;
+  }
+
+  .hero-heading {
+    font-size: var(--fs-hero);
+    font-weight: 700;
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+    font-family: var(--font-display);
+    color: var(--text);
+    margin: 0 0 var(--space-5);
+  }
+
+  .hero-sub {
+    font-size: var(--fs-body);
+    color: var(--text-secondary);
+    line-height: 1.7;
+    max-width: 50ch;
+    margin: 0 0 var(--space-6);
+  }
+
+  .hero-ctas {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+  }
+
+  .hero-ctas .btn {
+    width: 100%;
+  }
+
+  @media (min-width: 480px) {
+    .hero-ctas .btn {
+      width: auto;
+    }
+  }
+
+  .hero-logo {
+    flex-shrink: 0;
+  }
+
+  .hero-logo-img {
+    width: clamp(140px, 20vw, 260px);
+    height: auto;
+    border-radius: 50%;
+  }
+
+  /* ── Latest posts ── */
+  .section-header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: var(--space-6);
+  }
+
+  .section-all-link {
+    font-size: var(--fs-small);
+    color: var(--brand-ink);
+    text-decoration: none;
+    font-family: var(--font-display);
+    font-weight: 500;
+  }
+
+  .section-all-link:hover { text-decoration: underline; }
+  .section-all-link:focus-visible { outline: 3px solid var(--focus-ring); outline-offset: 2px; border-radius: var(--radius-sm); }
+
+  .posts-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--space-5);
+  }
+
+  @media (min-width: 768px) {
+    .posts-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+
+  @media (min-width: 1024px) {
+    .posts-grid { grid-template-columns: repeat(3, 1fr); }
+  }
+
+  .posts-empty {
+    color: var(--text-secondary);
+    font-size: var(--fs-small);
+  }
+
+  /* ── Product teaser ── */
+  .product-teaser {
+    background: var(--surface-1);
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .product-teaser-inner {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-6);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+  }
+
+  @media (min-width: 768px) {
+    .product-teaser-inner {
+      flex-direction: row;
+      align-items: center;
+    }
+  }
+
+  .product-teaser-image-wrap {
+    flex: 0 0 auto;
+    width: 100%;
+  }
+
+  @media (min-width: 768px) {
+    .product-teaser-image-wrap { width: 45%; }
+  }
+
+  .product-teaser-image {
+    width: 100%;
+    height: auto;
+    object-fit: cover;
+    border-radius: var(--radius-md);
+  }
+
+  .product-teaser-body {
+    flex: 1;
+    padding: var(--space-4) 0;
+  }
+
+  @media (min-width: 768px) {
+    .product-teaser-body { padding: var(--space-6); }
+  }
+
+  .product-teaser-title {
+    font-size: var(--fs-h2);
+    margin: 0 0 var(--space-4);
+    color: var(--text);
+  }
+
+  .product-teaser-desc {
+    color: var(--text-secondary);
+    margin: 0 0 var(--space-4);
+    line-height: 1.7;
+  }
+
+  .product-teaser-cmd {
+    margin: 0 0 var(--space-5);
+  }
+
+  .product-teaser-cmd code {
+    font-family: var(--font-mono);
+    font-size: var(--fs-small);
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: var(--space-2) var(--space-3);
+  }
+</style>

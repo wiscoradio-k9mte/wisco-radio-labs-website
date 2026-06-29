@@ -1,0 +1,46 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    # PREVIEW: triggers on feature/initial-build now so Travis can verify the deployed site.
+    # After Travis approves and the branch merges, change this to:
+    #   branches: [main]
+    branches: [feature/initial-build]
+  workflow_dispatch: # allow manual runs
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Only one deploy runs at a time; in-progress deploys are cancelled on new push.
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # withastro/action installs deps, runs astro check + astro build, uploads Pages artifact.
+      # v3 is the current release as of Astro 6 (verified against docs.astro.build/en/guides/deploy/github/).
+      - name: Build with Astro
+        uses: withastro/action@v3
+        with:
+          node-version: 22
+
+  deploy:
+    name: Deploy
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

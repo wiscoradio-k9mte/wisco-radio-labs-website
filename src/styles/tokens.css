@@ -1,0 +1,115 @@
+/*
+ * Design token contract.
+ * Values from design-system.md §2 — exact hex values computed against WCAG 2.1.
+ * Dark is the default (no attribute). Light is :root[data-theme="light"].
+ *
+ * Component CSS references ONLY these tokens, never raw hex — one toggle re-skins everything.
+ *
+ * Two kinds of orange on purpose (design-system §2):
+ *   --brand     (#E8821E) — fills and graphic identity; non-text surface color.
+ *   --brand-ink — amber-as-text; MUST differ per theme because amber-on-white fails contrast.
+ *                 Dark: logo amber directly (6.88:1). Light: burnt orange (5.30:1).
+ */
+
+:root {
+  /* surfaces */
+  --bg:          #0F1115;
+  --surface-1:   #181B22;
+  --surface-2:   #21252E;
+
+  /* text */
+  --text:          #E8EAED;  /* 15.67:1 on --bg */
+  --text-secondary:#A9B2C0;  /* 8.83:1  on --bg */
+  --text-muted:    #7C8694;  /* 5.12:1  on --bg — reserve for non-essential meta only */
+
+  /* brand / accent */
+  --brand:        #E8821E;   /* fills, nav underline, icons */
+  --brand-ink:    #E8821E;   /* links, inline accent text — 6.88:1 on --bg */
+  --brand-hover:  #F59E2C;   /* link/button hover — 8.83:1 on --bg */
+  --brand-active: #D2730F;   /* pressed — ~5.6:1 on --bg */
+  --on-brand:     #1A1411;   /* text on amber fills — 6.16:1 on --brand */
+  --brand-tint:   rgba(232,130,30,0.12); /* hover bg wash, composites over either field */
+
+  /* borders */
+  --border:        #2A2F3A;
+  --border-strong: #3A4150;
+
+  /* semantic */
+  --link:       var(--brand-ink);
+  --focus-ring: #F59E2C;
+  --success:    #56C98D;
+  --error:      #F4776B;
+
+  /* shadows — nearly invisible on dark; use borders + surface lift instead */
+  --shadow-sm: none;
+  --shadow-md: none;
+  --shadow-lg: none;
+
+  /* --- typography --- */
+  --font-display: "Space Grotesk Variable", "Segoe UI", system-ui, sans-serif;
+  --font-body:    "Inter Variable", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-mono:    "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+
+  /* fluid type scale — 16px floor, 18px ceiling on body */
+  --fs-caption: clamp(0.78rem, 0.74rem + 0.2vw, 0.86rem);  /* 12.5–13.8px */
+  --fs-small:   clamp(0.88rem, 0.85rem + 0.2vw, 0.95rem);  /* 14–15px     */
+  --fs-body:    clamp(1.00rem, 0.96rem + 0.3vw, 1.125rem); /* 16–18px     */
+  --fs-h4:      clamp(1.12rem, 1.05rem + 0.4vw, 1.25rem);  /* 18–20px     */
+  --fs-h3:      clamp(1.35rem, 1.20rem + 0.7vw, 1.62rem);  /* 21.6–26px   */
+  --fs-h2:      clamp(1.65rem, 1.40rem + 1.1vw, 2.15rem);  /* 26–34px     */
+  --fs-h1:      clamp(2.05rem, 1.65rem + 1.9vw, 2.95rem);  /* 33–47px     */
+  --fs-hero:    clamp(2.6rem,  1.9rem  + 3.2vw, 4.2rem);   /* 42–67px     */
+
+  /* spacing (4px base) */
+  --space-1:  0.25rem;
+  --space-2:  0.5rem;
+  --space-3:  0.75rem;
+  --space-4:  1rem;
+  --space-5:  1.5rem;
+  --space-6:  2rem;
+  --space-8:  3rem;
+  --space-10: 4rem;
+  --space-12: 6rem;
+  --space-16: 8rem;
+
+  /* shape */
+  --radius-sm:   6px;
+  --radius-md:   10px;
+  --radius-lg:   16px;
+  --radius-pill: 999px;
+
+  /* layout */
+  --container-max: 1100px;
+  --measure: 68ch;   /* article line-length cap */
+}
+
+/* Light theme overrides — color tokens only */
+:root[data-theme="light"] {
+  --bg:          #F7F4EF;
+  --surface-1:   #FFFFFF;
+  --surface-2:   #F0ECE4;
+
+  --text:           #1A1D23;  /* 15.39:1 on --bg */
+  --text-secondary: #4A515E;  /* 7.28:1  on --bg */
+  --text-muted:     #5F6875;  /* 5.14:1  on --bg */
+
+  --brand:        #E8821E;   /* fills only — boundary contrast low; button needs border (see global.css) */
+  --brand-ink:    #A14E0B;   /* links — 5.30:1 on --bg; this is the key split from dark */
+  --brand-hover:  #8A4309;   /* ~7:1 on --bg */
+  --brand-active: #733908;   /* ~9:1 on --bg */
+  --on-brand:     #1A1411;   /* text on amber fills; on hover/active in light use #FFF (see button CSS) */
+  --brand-tint:   rgba(232,130,30,0.10);
+
+  --border:        #E4DED4;
+  --border-strong: #D0C6B6;
+
+  --link:       var(--brand-ink);
+  --focus-ring: #A14E0B;  /* 5.30:1 on --bg — AA ✓ */
+  --success:    #1E7D4F;  /* 4.67:1 on --bg — AA ✓ */
+  --error:      #C2362B;  /* 4.96:1 on --bg — AA ✓ */
+
+  /* soft warm shadows in light mode */
+  --shadow-sm: 0 1px 2px rgba(40,30,15,0.06);
+  --shadow-md: 0 4px 14px rgba(40,30,15,0.08);
+  --shadow-lg: 0 12px 32px rgba(40,30,15,0.10);
+}

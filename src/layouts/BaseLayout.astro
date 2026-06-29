@@ -1,0 +1,55 @@
+---
+// BaseLayout.astro — outer shell for every page.
+// Owns: <html>, <head> (via BaseHead + inline theme script), <body>, Header, Footer.
+import BaseHead from '../components/BaseHead.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import { SITE_TITLE } from '../consts';
+
+interface Props {
+  title: string;
+  description?: string;
+  image?: string; // absolute URL for og:image
+}
+
+const { title = SITE_TITLE, description, image } = Astro.props;
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <BaseHead title={title} description={description} image={image} />
+
+    <!--
+      No-FOUC theme init — MUST be inline, MUST be before any stylesheet that paints.
+      Runs synchronously before the browser paints the first frame.
+      Order of preference:
+        1. User's saved choice in localStorage
+        2. OS prefers-color-scheme (light wins; dark wins when unset → default dark)
+    -->
+    <script is:inline>
+      (function () {
+        var stored = localStorage.getItem('theme');
+        var theme = stored
+          ? stored
+          : window.matchMedia('(prefers-color-scheme: light)').matches
+            ? 'light'
+            : 'dark'; // default dark when no preference
+        if (theme === 'light') {
+          document.documentElement.setAttribute('data-theme', 'light');
+        }
+      })();
+    </script>
+  </head>
+  <body>
+    <!-- Skip-to-content: first tab stop, visible on focus, jumps past the header -->
+    <a href="#main" class="skip-link">Skip to content</a>
+
+    <Header />
+
+    <main id="main">
+      <slot />
+    </main>
+
+    <Footer />
+  </body>
+</html>
