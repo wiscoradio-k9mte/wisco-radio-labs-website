@@ -34,7 +34,6 @@ import Nav from './Nav.astro';
   role="dialog"
   aria-modal="true"
   aria-label="Navigation menu"
-  hidden
 >
   <div class="menu-drawer-header">
     <span class="menu-drawer-title">Menu</span>
@@ -68,13 +67,16 @@ import Nav from './Nav.astro';
     console.warn('MobileMenu: missing required elements');
   } else {
     const FOCUSABLE = 'a[href], button:not([disabled]), input, [tabindex]:not([tabindex="-1"])';
+    // The main content wrapper to mark inert while drawer is open (screen-reader completeness).
+    const mainEl = document.getElementById('main');
 
     const open = () => {
-      drawer.hidden = false;
-      drawer.removeAttribute('hidden');
+      drawer.classList.add('is-open');
       trigger.setAttribute('aria-expanded', 'true');
       scrim.classList.add('menu-scrim--visible');
       document.body.style.overflow = 'hidden';
+      // Inert prevents AT from reaching page content while the dialog is open.
+      if (mainEl) mainEl.inert = true;
 
       // Move focus to the first focusable element in the drawer
       const first = drawer.querySelector<HTMLElement>(FOCUSABLE);
@@ -82,10 +84,11 @@ import Nav from './Nav.astro';
     };
 
     const close = () => {
-      drawer.hidden = true;
+      drawer.classList.remove('is-open');
       trigger.setAttribute('aria-expanded', 'false');
       scrim.classList.remove('menu-scrim--visible');
       document.body.style.overflow = '';
+      if (mainEl) mainEl.inert = false;
       trigger.focus(); // return focus to trigger on close
     };
 
@@ -98,12 +101,12 @@ import Nav from './Nav.astro';
 
     // Escape key closes
     document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && !drawer.hidden) close();
+      if (e.key === 'Escape' && drawer.classList.contains('is-open')) close();
     });
 
     // Focus trap: keep Tab cycling within the drawer while open
     drawer.addEventListener('keydown', (e) => {
-      if (e.key !== 'Tab' || drawer.hidden) return;
+      if (e.key !== 'Tab' || !drawer.classList.contains('is-open')) return;
       const focusable = Array.from(drawer.querySelectorAll<HTMLElement>(FOCUSABLE));
       if (focusable.length === 0) return;
       const first = focusable[0];
@@ -166,7 +169,8 @@ import Nav from './Nav.astro';
     .menu-scrim { transition: none; }
   }
 
-  /* Drawer */
+  /* Drawer — driven by .is-open class rather than the `hidden` attribute so the
+     translateX transition can actually run (display:none blocks transitions on reveal). */
   .menu-drawer {
     position: fixed;
     top: 0;
@@ -178,17 +182,24 @@ import Nav from './Nav.astro';
     z-index: 100;
     display: flex;
     flex-direction: column;
-    transform: translateX(100%);
-    transition: transform 200ms ease;
     overflow-y: auto;
+    /* Closed: slide off-screen and hide from AT + pointer events. */
+    visibility: hidden;
+    transform: translateX(100%);
+    /* When closing: let the slide finish (200ms) before hiding from AT. */
+    transition: transform 200ms ease, visibility 0s linear 200ms;
   }
 
-  .menu-drawer:not([hidden]) {
+  .menu-drawer.is-open {
+    visibility: visible;
     transform: translateX(0);
+    /* When opening: show immediately, then slide in. */
+    transition: transform 200ms ease, visibility 0s linear;
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .menu-drawer { transition: none; }
+    .menu-drawer,
+    .menu-drawer.is-open { transition: none; }
   }
 
   .menu-drawer-header {

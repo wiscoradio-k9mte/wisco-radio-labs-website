@@ -2,6 +2,11 @@
 // BaseHead.astro — all <head> meta, SEO, canonical, OG, RSS, JSON-LD, icons.
 // Every URL emitted here is built from Astro.site + Astro.url to be absolute and base-aware.
 // A hard-coded '/...' path 404s on a project-page site — so nothing is hard-coded.
+//
+// Analytics insertion point: ANALYTICS_ENABLED is currently false (src/consts.ts).
+// To enable: set ANALYTICS_ENABLED = true in consts.ts, then replace `null` in the
+// {ANALYTICS_ENABLED && ...} expression below with the vendor <script> element.
+// Vendor is an open decision — not wired until Travis picks one at domain go-live.
 import { SITE_TITLE, SITE_DESCRIPTION, ANALYTICS_ENABLED, PREVIEW_NOINDEX } from '../consts';
 import { withBase } from '../lib/link';
 import '../styles/global.css';
@@ -103,11 +108,11 @@ const siteSchema = JSON.stringify([
 <meta name="twitter:image:alt" content="Wisco Radio Labs — ham radio, built in the open." />
 <meta name="twitter:creator" content="@K9MTE" />
 
-<!-- theme-color: match the active theme's --bg.
-     The inline theme script in BaseLayout sets data-theme before this, so the meta reflects
-     the right value on the first paint. JS updates it on toggle. -->
-<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0F1115" />
-<meta name="theme-color" media="(prefers-color-scheme: light)" content="#F7F4EF" />
+<!-- theme-color: single tag driven by JS so browser chrome follows the user's choice,
+     not the OS preference. Default to dark (#0F1115 = --bg in dark mode).
+     The inline no-flash script in BaseLayout sets the correct value before first paint;
+     ThemeToggle.astro updates it on every toggle. -->
+<meta id="theme-color-meta" name="theme-color" content="#0F1115" />
 
 <!-- JSON-LD structured data: Organization + WebSite (on every page).
      BlogPosting is injected per-article via the <slot name="head"> in BaseLayout.
@@ -115,11 +120,4 @@ const siteSchema = JSON.stringify([
      not a processed module script. -->
 <script is:inline type="application/ld+json" set:html={siteSchema} />
 
-<!--
-  Analytics insertion point (currently disabled — ANALYTICS_ENABLED = false in consts.ts).
-  When ready:
-    1. Set ANALYTICS_ENABLED = true in src/consts.ts
-    2. Add the vendor <script> tag inside the {ANALYTICS_ENABLED && (...)} block below.
-  Analytics vendor is an open decision — not wired until Travis picks one at domain go-live.
--->
 {ANALYTICS_ENABLED && null /* replace null with the vendor <script> element */}

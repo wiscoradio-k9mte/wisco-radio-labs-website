@@ -1,5 +1,4 @@
 import { defineConfig } from 'astro/config';
-import react from '@astrojs/react';
 import sitemap from '@astrojs/sitemap';
 import remarkRewriteLinks from './src/lib/remark-rewrite-links.mjs';
 
@@ -11,7 +10,10 @@ const BASE = '/wisco-radio-labs-website';
 export default defineConfig({
   site: 'https://wiscoradio-k9mte.github.io',
   base: BASE, // no trailing slash; Astro normalizes
-  integrations: [react(), sitemap()],
+  // No React islands in v1 — all interactive elements are plain Astro + module scripts.
+  // Re-add @astrojs/react here (and reinstall the package) when a true React island is needed
+  // (e.g. the planned tag-filter component on the blog index).
+  integrations: [sitemap()],
   markdown: {
     // Rewrite root-absolute links in Markdown content to include the base path.
     // Plain .md files can't call withBase() — this plugin handles it at build time.
