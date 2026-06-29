@@ -2,7 +2,7 @@
 // BaseHead.astro — all <head> meta, SEO, canonical, OG, RSS, sitemap links.
 // Every URL emitted here is built from Astro.site + Astro.url to be absolute and base-aware.
 // A hard-coded '/...' path 404s on a project-page site — so nothing is hard-coded.
-import { SITE_TITLE, SITE_DESCRIPTION, ANALYTICS_ENABLED } from '../consts';
+import { SITE_TITLE, SITE_DESCRIPTION, ANALYTICS_ENABLED, PREVIEW_NOINDEX } from '../consts';
 import { withBase } from '../lib/link';
 import '../styles/global.css';
 
@@ -30,6 +30,10 @@ const pageTitle = title === SITE_TITLE ? title : `${title} — ${SITE_TITLE}`;
 <title>{pageTitle}</title>
 <meta name="description" content={description} />
 <link rel="canonical" href={canonicalURL} />
+
+<!-- Preview guard: keep the public github.io preview out of search indexes while we
+     iterate. Flip PREVIEW_NOINDEX to false in consts.ts at real go-live. -->
+{PREVIEW_NOINDEX && <meta name="robots" content="noindex, nofollow" />}
 
 <!-- Favicon — base-path-aware via withBase() -->
 <link rel="icon" type="image/svg+xml" href={withBase('/favicon.svg')} />

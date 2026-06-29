@@ -34,3 +34,8 @@ export const SOCIAL_LINKS = {
 // Set to true and add the vendor <script> in BaseHead.astro when the domain is live.
 // Analytics vendor is an open decision for Travis — not picked silently here.
 export const ANALYTICS_ENABLED = false;
+
+// Preview guard. The github.io preview is publicly reachable (private Pages needs a paid
+// plan), so while we're iterating we tell search engines not to index it. Flip to false
+// at real go-live with the custom domain, so the launched site CAN be found/indexed.
+export const PREVIEW_NOINDEX = true;
