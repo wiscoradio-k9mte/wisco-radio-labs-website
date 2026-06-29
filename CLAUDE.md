@@ -89,6 +89,13 @@ gloss pass worked (reachable newcomers rose: Tariq 3→4, Hassan 2→3; expert h
   + add `public/CNAME` + **enable Enforce HTTPS in Pages** → flip `PREVIEW_NOINDEX=false` →
   (optional) wire cookieless analytics (Cloudflare Web Analytics rec; update the privacy page when
   added). That's the whole launch list now.
-- **Minor deferred:** remark-plugin/content-schema unit tests; blog code-block copy button;
-  screenshot lightbox; optional "activations/contacts" parallelism across surfaces.
+- **Optionals DONE (2026-06-29):** OG card now renders in the **brand fonts** (Space Grotesk +
+  JetBrains Mono via committed `scripts/fonts/` + runtime FONTCONFIG_FILE) AND a **lattice tower**
+  matching the logo (parametric truss in `generate-brand-assets.mjs`); **accessible screenshot
+  lightbox** on Products (dialog reparented to `<body>` so `#main` inert doesn't disable it —
+  Chrome-verified); **blog code-block copy button**; the Astro `markdown.remarkPlugins`
+  deprecation cleared (now `markdown.processor: unified()`). **28 tests** (added remark-rewrite-links
+  + content-schema, both biting). NOTE: `astro check` caches markdown render in `node_modules/.astro`
+  — clean that when changing the remark plugin locally. Open: optional "activations/contacts"
+  parallelism (cosmetic); Travis's on-device lightbox tap-check (nice-to-have).
 - Travis's real-phone read-quality check (his standing bar).
