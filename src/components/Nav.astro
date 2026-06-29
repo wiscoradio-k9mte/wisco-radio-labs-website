@@ -1,0 +1,105 @@
+---
+// Nav.astro — the 5 nav links.
+// Rendered in both the desktop header and the mobile drawer — same component, same links, no drift.
+import { NAV_ITEMS } from '../consts';
+import { withBase } from '../lib/link';
+
+// Detect active page: compare current path (without trailing slash) to nav item href.
+const currentPath = Astro.url.pathname.replace(/\/$/, '') || '/';
+
+interface Props {
+  /** Extra CSS class(es) applied to the <ul> — used by desktop vs drawer styling. */
+  class?: string;
+}
+const { class: extraClass } = Astro.props;
+---
+<ul class:list={['nav-list', extraClass]} role="list">
+  {NAV_ITEMS.map(({ label, href }) => {
+    const fullHref = withBase(href);
+    // Active: exact match, or prefix match for /blog/ sub-pages
+    const isActive =
+      currentPath === fullHref.replace(/\/$/, '') ||
+      (href !== '/' && currentPath.startsWith(fullHref.replace(/\/$/, '')));
+    return (
+      <li>
+        <a
+          href={fullHref}
+          aria-current={isActive ? 'page' : undefined}
+          class:list={['nav-link', { 'nav-link--active': isActive }]}
+        >
+          {label}
+        </a>
+      </li>
+    );
+  })}
+</ul>
+
+<style>
+  .nav-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+  }
+
+  .nav-link {
+    display: flex;
+    align-items: center;
+    min-height: 48px;
+    padding-inline: var(--space-3);
+    color: var(--text-secondary);
+    text-decoration: none;
+    font-family: var(--font-display);
+    font-size: var(--fs-small);
+    font-weight: 500;
+    border-radius: var(--radius-sm);
+    position: relative;
+    transition: color 150ms ease;
+  }
+
+  /* Active underline indicator */
+  .nav-link::after {
+    content: '';
+    position: absolute;
+    bottom: 6px;
+    left: var(--space-3);
+    right: var(--space-3);
+    height: 2px;
+    background-color: var(--brand);
+    border-radius: 2px;
+    opacity: 0;
+    transform: scaleX(0);
+    transition: opacity 150ms ease, transform 150ms ease;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .nav-link::after {
+      transition: none;
+    }
+  }
+
+  .nav-link:hover {
+    color: var(--text);
+  }
+
+  .nav-link:hover::after {
+    opacity: 1;
+    transform: scaleX(1);
+  }
+
+  .nav-link:focus-visible {
+    outline: 3px solid var(--focus-ring);
+    outline-offset: 2px;
+  }
+
+  .nav-link--active {
+    color: var(--text);
+  }
+
+  .nav-link--active::after {
+    opacity: 1;
+    transform: scaleX(1);
+  }
+</style>

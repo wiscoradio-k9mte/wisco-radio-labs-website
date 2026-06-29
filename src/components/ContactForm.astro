@@ -1,0 +1,434 @@
+---
+// ContactForm.astro — Web3Forms form with graceful mailto fallback.
+//
+// If WEB3FORMS_KEY is the placeholder, the form doesn't render — we show a friendly
+// "reach me by email" block instead so there's always a working contact path.
+// Once the real key is set in consts.ts, the form renders and the mailto becomes secondary.
+//
+// Web3Forms API: POST https://api.web3forms.com/submit with access_key + form fields.
+// Honeypot: botcheck (hidden checkbox — bots check it, legit users don't).
+// JSON response: { success: true|false, message: "..." }
+import { WEB3FORMS_KEY, CONTACT_EMAIL } from '../consts';
+
+const isPlaceholder = WEB3FORMS_KEY === 'PLACEHOLDER_WEB3FORMS_KEY';
+---
+
+{isPlaceholder ? (
+  <!-- Placeholder state: key not yet configured; show a clean mailto path. -->
+  <!-- No dev jargon, no form — just a direct working contact option. -->
+  <div class="email-fallback">
+    <p class="fallback-text">
+      The best way to reach me right now is by email. I check it regularly and will get back to you.
+    </p>
+    {CONTACT_EMAIL && (
+      <a href={`mailto:${CONTACT_EMAIL}`} class="btn btn-primary fallback-btn">
+        Email me &rarr;
+      </a>
+    )}
+    <p class="fallback-address">{CONTACT_EMAIL}</p>
+  </div>
+) : (
+  <!-- Form state: real key is set; render the full form with mailto as secondary. -->
+  <form
+    class="contact-form"
+    action="https://api.web3forms.com/submit"
+    method="POST"
+    novalidate
+    data-web3forms
+  >
+    <!-- Web3Forms access key (required) -->
+    <input type="hidden" name="access_key" value={WEB3FORMS_KEY} />
+
+    <!-- Web3Forms honeypot — bots check it; legit users never see it -->
+    <div class="honeypot" aria-hidden="true">
+      <label for="botcheck-field">Leave this unchecked</label>
+      <input
+        type="checkbox"
+        id="botcheck-field"
+        name="botcheck"
+        tabindex="-1"
+        autocomplete="off"
+      />
+    </div>
+
+    <div class="form-field">
+      <label class="form-label" for="contact-name">
+        Name <span class="form-required">(required)</span>
+      </label>
+      <input
+        class="form-input"
+        type="text"
+        id="contact-name"
+        name="name"
+        required
+        aria-required="true"
+        autocomplete="name"
+        placeholder="Your name"
+      />
+      <!-- role="alert" already implies assertive; aria-live would be redundant/contradictory. -->
+      <p class="form-error" id="contact-name-error" role="alert" hidden>
+        Please enter your name.
+      </p>
+    </div>
+
+    <div class="form-field">
+      <label class="form-label" for="contact-email">
+        Email <span class="form-required">(required)</span>
+      </label>
+      <input
+        class="form-input"
+        type="email"
+        id="contact-email"
+        name="email"
+        required
+        aria-required="true"
+        autocomplete="email"
+        placeholder="your@email.com"
+      />
+      <p class="form-error" id="contact-email-error" role="alert" hidden>
+        Enter a valid email address.
+      </p>
+    </div>
+
+    <div class="form-field">
+      <label class="form-label" for="contact-subject">Subject</label>
+      <input
+        class="form-input"
+        type="text"
+        id="contact-subject"
+        name="subject"
+        autocomplete="off"
+        placeholder="What's this about?"
+      />
+    </div>
+
+    <div class="form-field">
+      <label class="form-label" for="contact-message">
+        Message <span class="form-required">(required)</span>
+      </label>
+      <textarea
+        class="form-input form-textarea"
+        id="contact-message"
+        name="message"
+        required
+        aria-required="true"
+        rows="6"
+        placeholder="Your message…"
+      ></textarea>
+      <p class="form-error" id="contact-message-error" role="alert" hidden>
+        Please enter a message.
+      </p>
+    </div>
+
+    <!-- Status messages shown after submission attempt.
+         Border + icon carry the semantic; body text uses --text so it passes AA in light mode. -->
+    <div class="form-status" id="form-success" role="status" hidden>
+      <p>Thanks — I'll get back to you. 73! (that's ham for "best regards")</p>
+    </div>
+    <div class="form-status form-status--error" id="form-network-error" role="alert" hidden>
+      <p>
+        Something went wrong — please try again, or
+        {CONTACT_EMAIL
+          ? <> reach me directly at <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>.</>
+          : ' reach out directly.'}
+      </p>
+    </div>
+
+    <div class="form-actions">
+      <button class="btn btn-primary form-submit" type="submit" id="form-submit-btn">
+        Send message
+      </button>
+      {CONTACT_EMAIL && (
+        <p class="form-alt-contact">
+          Or <a href={`mailto:${CONTACT_EMAIL}`}>email me directly</a>.
+        </p>
+      )}
+    </div>
+  </form>
+)}
+
+<script>
+  // Progressive enhancement: validate on blur + handle async Web3Forms submission.
+  // Without JS the form POSTs normally (Web3Forms handles it server-side).
+  const form = document.querySelector<HTMLFormElement>('[data-web3forms]');
+  if (form) {
+    const showError = (fieldId: string, message: string) => {
+      const input = document.getElementById(fieldId) as HTMLInputElement | null;
+      const errEl = document.getElementById(`${fieldId}-error`) as HTMLElement | null;
+      if (input && errEl) {
+        input.setAttribute('aria-invalid', 'true');
+        input.setAttribute('aria-describedby', `${fieldId}-error`);
+        input.classList.add('input--error');
+        errEl.textContent = message;
+        errEl.hidden = false;
+      }
+    };
+
+    const clearError = (fieldId: string) => {
+      const input = document.getElementById(fieldId) as HTMLInputElement | null;
+      const errEl = document.getElementById(`${fieldId}-error`) as HTMLElement | null;
+      if (input && errEl) {
+        input.removeAttribute('aria-invalid');
+        input.removeAttribute('aria-describedby');
+        input.classList.remove('input--error');
+        errEl.hidden = true;
+      }
+    };
+
+    // Validate on blur
+    form.addEventListener('blur', (e) => {
+      const target = e.target as HTMLInputElement;
+      if (!target?.id || !target?.required) return;
+      if (target.value.trim() === '') {
+        const messages: Record<string, string> = {
+          'contact-name': 'Please enter your name.',
+          'contact-email': 'Enter a valid email address.',
+          'contact-message': 'Please enter a message.',
+        };
+        showError(target.id, messages[target.id] ?? 'This field is required.');
+      } else if (target.type === 'email' && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(target.value)) {
+        // Require at least local@domain.tld — honest minimum before server validates further.
+        showError('contact-email', 'Enter a valid email address.');
+      } else {
+        clearError(target.id);
+      }
+    }, true);
+
+    // Async submission via Web3Forms JSON API
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      clearError('contact-name');
+      clearError('contact-email');
+      clearError('contact-message');
+
+      // Validate required fields before sending
+      const name = (document.getElementById('contact-name') as HTMLInputElement)?.value.trim();
+      const email = (document.getElementById('contact-email') as HTMLInputElement)?.value.trim();
+      const message = (document.getElementById('contact-message') as HTMLTextAreaElement)?.value.trim();
+      let firstError: HTMLElement | null = null;
+
+      if (!name) {
+        showError('contact-name', 'Please enter your name.');
+        firstError ??= document.getElementById('contact-name');
+      }
+      if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        // Same check as blur handler: require local@domain.tld minimum.
+        showError('contact-email', 'Enter a valid email address.');
+        firstError ??= document.getElementById('contact-email');
+      }
+      if (!message) {
+        showError('contact-message', 'Please enter a message.');
+        firstError ??= document.getElementById('contact-message');
+      }
+
+      if (firstError) {
+        firstError.focus();
+        return;
+      }
+
+      const btn = document.getElementById('form-submit-btn') as HTMLButtonElement;
+      const success = document.getElementById('form-success') as HTMLElement;
+      const netError = document.getElementById('form-network-error') as HTMLElement;
+
+      btn.disabled = true;
+      btn.setAttribute('aria-busy', 'true');
+      btn.textContent = 'Sending…';
+      success.hidden = true;
+      netError.hidden = true;
+
+      try {
+        const resp = await fetch('https://api.web3forms.com/submit', {
+          method: 'POST',
+          headers: { Accept: 'application/json' },
+          body: new FormData(form),
+        });
+
+        // Web3Forms returns 200 even on some errors; check the JSON success flag.
+        const data = await resp.json() as { success: boolean; message?: string };
+
+        if (data.success) {
+          form.reset();
+          success.hidden = false;
+          // Re-enable so the user can send a follow-up if needed.
+          btn.disabled = false;
+          btn.removeAttribute('aria-busy');
+          btn.textContent = 'Send message';
+        } else {
+          netError.hidden = false;
+          btn.disabled = false;
+          btn.removeAttribute('aria-busy');
+          btn.textContent = 'Send message';
+        }
+      } catch {
+        netError.hidden = false;
+        btn.disabled = false;
+        btn.removeAttribute('aria-busy');
+        btn.textContent = 'Send message';
+      }
+    });
+  }
+</script>
+
+<style>
+  /* ─── Placeholder / mailto fallback ── */
+  .email-fallback {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+    max-width: 42ch;
+  }
+
+  .fallback-text {
+    color: var(--text);
+    line-height: 1.7;
+    margin: 0;
+  }
+
+  .fallback-btn {
+    align-self: flex-start;
+  }
+
+  .fallback-address {
+    font-size: var(--fs-small);
+    color: var(--text-muted);
+    margin: 0;
+  }
+
+  /* ─── Form ── */
+  .contact-form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
+  }
+
+  /* Honeypot — off screen, invisible to real users */
+  .honeypot {
+    position: absolute;
+    left: -9999px;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+  }
+
+  .form-field {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+  }
+
+  .form-label {
+    font-size: var(--fs-small);
+    font-weight: 500;
+    color: var(--text);
+  }
+
+  .form-required {
+    font-weight: 400;
+    color: var(--text-muted);
+  }
+
+  .form-input {
+    min-height: 48px;
+    padding: var(--space-3);
+    background: var(--surface-2);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-sm);
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: var(--fs-body);
+    transition: border-color 150ms ease, outline 150ms ease;
+    width: 100%;
+  }
+
+  .form-input::placeholder {
+    color: var(--text-muted);
+  }
+
+  .form-input:hover {
+    border-color: var(--text-muted);
+  }
+
+  .form-input:focus {
+    outline: 3px solid var(--focus-ring);
+    outline-offset: 0;
+    border-color: var(--brand);
+  }
+
+  .form-input.input--error {
+    border-color: var(--error);
+  }
+
+  .form-textarea {
+    min-height: 140px;
+    resize: vertical;
+    line-height: 1.6;
+  }
+
+  .form-error {
+    font-size: var(--fs-small);
+    color: var(--error);
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+  }
+
+  .form-error::before {
+    content: '!';
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--error);
+    color: white;
+    font-weight: 700;
+    font-size: 11px;
+    flex-shrink: 0;
+  }
+
+  /* Status messages: colored border carries the semantic; body text uses --text for AA contrast.
+     In light mode --success and --error are dark enough for text but the tinted background
+     makes the combination fail AA — so body text goes to --text and the border signals state. */
+  .form-status {
+    padding: var(--space-4);
+    border-radius: var(--radius-md);
+    background: color-mix(in srgb, var(--success) 10%, transparent);
+    border: 2px solid var(--success);
+    color: var(--text);
+    font-size: var(--fs-small);
+  }
+
+  .form-status p { margin: 0; }
+
+  .form-status--error {
+    background: color-mix(in srgb, var(--error) 8%, transparent);
+    border-color: var(--error);
+  }
+
+  /* Actions row: submit button + secondary mailto link */
+  .form-actions {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--space-4);
+  }
+
+  .form-submit {
+    width: 100%;
+  }
+
+  .form-alt-contact {
+    font-size: var(--fs-small);
+    color: var(--text-secondary);
+    margin: 0;
+  }
+
+  @media (min-width: 480px) {
+    .form-submit {
+      width: auto;
+      min-width: 180px;
+    }
+  }
+</style>

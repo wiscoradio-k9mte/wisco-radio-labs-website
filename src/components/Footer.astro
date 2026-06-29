@@ -1,0 +1,197 @@
+---
+import { Image } from 'astro:assets';
+import { SITE_TITLE, NAV_ITEMS, SOCIAL_LINKS, CONTACT_EMAIL } from '../consts';
+import { withBase } from '../lib/link';
+import logo from '../assets/brand/wisco-radio-labs-logo.png';
+---
+<footer class="site-footer">
+  <div class="footer-inner container">
+
+    <!-- Group 1: badge + tagline -->
+    <div class="footer-brand">
+      <a href={withBase('/')} class="footer-logo-link" aria-label="Wisco Radio Labs — home">
+        <Image src={logo} alt="" width={48} height={48} class="footer-logo-img" loading="lazy" />
+      </a>
+      <div class="footer-tagline">
+        <p class="footer-brand-name">{SITE_TITLE}</p>
+        <p class="footer-desc">Ham-radio maker brand from the Driftless (southwest Wisconsin).<br />Made by Travis Engh, K9MTE.</p>
+      </div>
+    </div>
+
+    <!-- Group 2: nav links + RSS -->
+    <nav aria-label="Footer navigation" class="footer-nav">
+      <ul role="list">
+        {NAV_ITEMS.map(({ label, href }) => (
+          <li><a href={withBase(href)}>{label}</a></li>
+        ))}
+        <li>
+          <a href={withBase('/rss.xml')} aria-label="RSS feed">RSS</a>
+        </li>
+      </ul>
+    </nav>
+
+    <!-- Group 3: contact / social links (render only links that have values) -->
+    <div class="footer-contact">
+      {CONTACT_EMAIL && (
+        <a href={`mailto:${CONTACT_EMAIL}`} class="footer-link" aria-label={`Email ${CONTACT_EMAIL}`}>
+          <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+            <polyline points="22,6 12,13 2,6"/>
+          </svg>
+          <span>Email</span>
+        </a>
+      )}
+      {SOCIAL_LINKS.qrz && (
+        <a href={SOCIAL_LINKS.qrz} class="footer-link" rel="noopener noreferrer" target="_blank" aria-label="QRZ profile for K9MTE (opens in new tab)">
+          <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M23 3a10.9 10.9 0 01-3.14 1.53 4.48 4.48 0 00-7.86 3v1A10.66 10.66 0 013 4s-4 9 5 13a11.64 11.64 0 01-7 2c9 5 20 0 20-11.5a4.5 4.5 0 00-.08-.83A7.72 7.72 0 0023 3z"/>
+          </svg>
+          <span>QRZ (ham radio profile): K9MTE</span>
+        </a>
+      )}
+      {SOCIAL_LINKS.youtube && (
+        <a href={SOCIAL_LINKS.youtube} class="footer-link" rel="noopener noreferrer" target="_blank" aria-label="Wisco Radio Labs on YouTube (opens in new tab)">
+          <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M22.54 6.42a2.78 2.78 0 00-1.95-1.96C18.88 4 12 4 12 4s-6.88 0-8.59.46a2.78 2.78 0 00-1.95 1.96A29 29 0 001 12a29 29 0 00.46 5.58A2.78 2.78 0 003.41 19.54C5.12 20 12 20 12 20s6.88 0 8.59-.46a2.78 2.78 0 001.95-1.96A29 29 0 0023 12a29 29 0 00-.46-5.58z"/>
+            <polygon points="9.75 15.02 15.5 12 9.75 8.98 9.75 15.02"/>
+          </svg>
+          <span>YouTube</span>
+        </a>
+      )}
+      {SOCIAL_LINKS.github && (
+        <a href={SOCIAL_LINKS.github} class="footer-link" rel="noopener noreferrer" target="_blank" aria-label="Wisco Radio Labs on GitHub (opens in new tab)">
+          <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 00-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0020 4.77 5.07 5.07 0 0019.91 1S18.73.65 16 2.48a13.38 13.38 0 00-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 005 4.77a5.44 5.44 0 00-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 009 18.13V22"/>
+          </svg>
+          <span>GitHub</span>
+        </a>
+      )}
+    </div>
+
+  </div>
+
+  <!-- Bottom bar -->
+  <div class="footer-bottom">
+    <div class="container">
+      <p>&copy; 2026 Wisco Radio Labs &middot; Made in the Driftless</p>
+    </div>
+  </div>
+</footer>
+
+<style>
+  .site-footer {
+    background-color: var(--surface-1);
+    border-top: 1px solid var(--border);
+    padding-top: var(--space-10);
+  }
+
+  .footer-inner {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--space-8);
+  }
+
+  @media (min-width: 1024px) {
+    .footer-inner {
+      grid-template-columns: 1fr 1fr 1fr;
+      align-items: start;
+    }
+  }
+
+  /* Group 1 — brand */
+  .footer-brand {
+    display: flex;
+    gap: var(--space-4);
+    align-items: flex-start;
+  }
+
+  .footer-logo-link {
+    display: block;
+    flex-shrink: 0;
+  }
+
+  .footer-logo-link:focus-visible {
+    outline: 3px solid var(--focus-ring);
+    outline-offset: 4px;
+    border-radius: 50%;
+  }
+
+  .footer-logo-img {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    object-fit: contain;
+  }
+
+  .footer-brand-name {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: var(--fs-body);
+    color: var(--text);
+    margin: 0 0 var(--space-2);
+  }
+
+  .footer-desc {
+    font-size: var(--fs-small);
+    color: var(--text-muted);
+    margin: 0;
+    line-height: 1.6;
+  }
+
+  /* Group 2 — nav */
+  .footer-nav ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+  }
+
+  .footer-nav a {
+    display: flex;
+    align-items: center;
+    min-height: 48px;
+    color: var(--text-secondary);
+    text-decoration: none;
+    font-size: var(--fs-small);
+    transition: color 150ms ease;
+  }
+
+  .footer-nav a:hover { color: var(--brand-ink); }
+  .footer-nav a:focus-visible { outline: 3px solid var(--focus-ring); outline-offset: 2px; border-radius: var(--radius-sm); }
+
+  /* Group 3 — contact */
+  .footer-contact {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+  }
+
+  .footer-link {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    min-height: 48px;
+    color: var(--text-secondary);
+    text-decoration: none;
+    font-size: var(--fs-small);
+    transition: color 150ms ease;
+  }
+
+  .footer-link:hover { color: var(--brand-ink); }
+  .footer-link:focus-visible { outline: 3px solid var(--focus-ring); outline-offset: 2px; border-radius: var(--radius-sm); }
+
+  /* Bottom bar */
+  .footer-bottom {
+    margin-top: var(--space-8);
+    padding-block: var(--space-4);
+    border-top: 1px solid var(--border);
+  }
+
+  .footer-bottom p {
+    margin: 0;
+    font-size: var(--fs-caption);
+    color: var(--text-muted);
+  }
+</style>

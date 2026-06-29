@@ -1,0 +1,15 @@
+---
+interface Props {
+  date: Date;
+}
+const { date } = Astro.props;
+
+// Consistent date format across the site: "Jun 28, 2026"
+const formatted = date.toLocaleDateString('en-US', {
+  year: 'numeric',
+  month: 'short',
+  day: 'numeric',
+  timeZone: 'UTC', // frontmatter dates are date-only; force UTC to avoid timezone shifts
+});
+---
+<time datetime={date.toISOString()}>{formatted}</time>

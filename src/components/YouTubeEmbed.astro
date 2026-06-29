@@ -1,0 +1,53 @@
+---
+// YouTubeEmbed.astro — privacy-friendly, click-to-load YouTube facade.
+// Does NOT load the YouTube iframe until the user clicks. This keeps mobile load fast
+// (raw eager iframes cost hundreds of KB and third-party tracking on every page load).
+//
+// Uses astro-embed's <YouTube> web component, which handles the facade + poster thumbnail
+// automatically. If astro-embed causes issues, the fallback is the hand-rolled facade below —
+// same UX, just slightly more markup.
+//
+// See: https://astro-embed.netlify.app/components/youtube/
+import { YouTube } from 'astro-embed';
+import { extractYouTubeId } from '../lib/youtube';
+
+interface Props {
+  id: string;   // YouTube video id or URL — extractYouTubeId normalizes it
+  title?: string;
+}
+
+const { id, title = 'Watch video' } = Astro.props;
+const videoId = extractYouTubeId(id);
+---
+<div class="youtube-wrap">
+  {videoId ? (
+    <YouTube id={videoId} title={title} />
+  ) : (
+    <!-- Fallback when no ID can be extracted: a link out to YouTube -->
+    <p class="youtube-fallback">
+      Video unavailable — <a href={`https://www.youtube.com/watch?v=${id}`} rel="noopener noreferrer" target="_blank">watch on YouTube ↗</a>
+    </p>
+  )}
+</div>
+
+<style>
+  .youtube-wrap {
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    border: 1px solid var(--border);
+    margin-block: var(--space-6);
+  }
+
+  /* astro-embed renders a <lite-youtube> web component; override its border-radius */
+  :global(lite-youtube) {
+    border-radius: 0 !important; /* outer wrap already has radius */
+  }
+
+  .youtube-fallback {
+    padding: var(--space-5);
+    background: var(--surface-2);
+    color: var(--text-secondary);
+    font-size: var(--fs-small);
+    margin: 0;
+  }
+</style>

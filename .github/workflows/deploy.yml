@@ -1,0 +1,58 @@
+name: Test & Build
+
+on:
+  push:
+    # main is the canonical source — deploys the GitHub Pages preview.
+    # (Still a preview: noindex on, no custom domain yet. See PREVIEW_NOINDEX in src/consts.ts.)
+    branches: [main]
+  workflow_dispatch: # allow manual runs
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Only one deploy runs at a time; in-progress deploys are cancelled on new push.
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build & Gate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # withastro/action installs deps, runs astro check + astro build, and uploads
+      # the Pages artifact. v3 is the current release for Astro 6.
+      # (verified: docs.astro.build/en/guides/deploy/github/)
+      - name: Build with Astro
+        uses: withastro/action@v3
+        with:
+          node-version: 22
+
+      # Unit tests — run AFTER build so import.meta.env.PROD is irrelevant to dist/,
+      # but these are pure-logic tests that don't need dist/. Both gates must pass
+      # before the deploy job is allowed to run (it depends on this job via `needs: build`).
+      - name: Unit tests (vitest)
+        run: npm test
+
+      # Link-integrity + draft-exclusion gate — requires dist/ to exist (built above).
+      # Scans every HTML file for root-absolute hrefs missing the base prefix, and
+      # asserts no draft: true post was emitted into dist/blog/.
+      - name: Link-integrity & draft-exclusion gate
+        run: npm run test:links
+
+  deploy:
+    name: Deploy
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
