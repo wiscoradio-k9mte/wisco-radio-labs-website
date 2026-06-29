@@ -28,6 +28,7 @@ const isPlaceholder = WEB3FORMS_KEY === 'PLACEHOLDER_WEB3FORMS_KEY';
     <p class="fallback-address">{CONTACT_EMAIL}</p>
   </div>
 ) : (
+  <Fragment>
   <!-- Form state: real key is set; render the full form with mailto as secondary. -->
   <form
     class="contact-form"
@@ -120,6 +121,16 @@ const isPlaceholder = WEB3FORMS_KEY === 'PLACEHOLDER_WEB3FORMS_KEY';
       </p>
     </div>
 
+    <!-- hCaptcha — enabled on the Web3Forms account, so the widget is required or
+         Web3Forms rejects the submission. Rendered zero-config from data-captcha by the
+         Web3Forms client script (loaded after the form); the token rides along in FormData. -->
+    <div class="form-field form-captcha">
+      <div class="h-captcha" data-captcha="true" data-theme="dark"></div>
+      <p class="form-error" id="contact-captcha-error" role="alert" hidden>
+        Please complete the captcha so I know you're human.
+      </p>
+    </div>
+
     <!-- Status messages shown after submission attempt.
          Border + icon carry the semantic; body text uses --text so it passes AA in light mode. -->
     <div class="form-status" id="form-success" role="status" hidden>
@@ -145,6 +156,9 @@ const isPlaceholder = WEB3FORMS_KEY === 'PLACEHOLDER_WEB3FORMS_KEY';
       )}
     </div>
   </form>
+  <!-- Web3Forms client script: renders the hCaptcha widget with their shared sitekey. -->
+  <script is:inline src="https://web3forms.com/client/script.js" async defer></script>
+  </Fragment>
 )}
 
 <script>
@@ -200,6 +214,8 @@ const isPlaceholder = WEB3FORMS_KEY === 'PLACEHOLDER_WEB3FORMS_KEY';
       clearError('contact-name');
       clearError('contact-email');
       clearError('contact-message');
+      const captchaErr = document.getElementById('contact-captcha-error');
+      if (captchaErr) captchaErr.hidden = true;
 
       // Validate required fields before sending
       const name = (document.getElementById('contact-name') as HTMLInputElement)?.value.trim();
@@ -226,6 +242,13 @@ const isPlaceholder = WEB3FORMS_KEY === 'PLACEHOLDER_WEB3FORMS_KEY';
         return;
       }
 
+      // hCaptcha is enforced on the Web3Forms account — require a token before sending.
+      const captchaToken = (form.querySelector('textarea[name="h-captcha-response"]') as HTMLTextAreaElement | null)?.value || '';
+      if (!captchaToken) {
+        if (captchaErr) captchaErr.hidden = false;
+        return;
+      }
+
       const btn = document.getElementById('form-submit-btn') as HTMLButtonElement;
       const success = document.getElementById('form-success') as HTMLElement;
       const netError = document.getElementById('form-network-error') as HTMLElement;
@@ -248,6 +271,7 @@ const isPlaceholder = WEB3FORMS_KEY === 'PLACEHOLDER_WEB3FORMS_KEY';
 
         if (data.success) {
           form.reset();
+          try { (window as any).hcaptcha?.reset(); } catch { /* widget may not expose reset; harmless */ }
           success.hidden = false;
           // Re-enable so the user can send a follow-up if needed.
           btn.disabled = false;
