@@ -81,7 +81,11 @@ gloss pass worked (reachable newcomers rose: Tariq 3→4, Hassan 2→3; expert h
   hcaptcha `*.hcaptcha.com` + youtube-nocookie + self-hosted fonts; `'unsafe-inline'` for
   script/style is deliberate — third parties inject inline, static site has no XSS sink;
   `frame-ancestors` not enforceable via meta — a CDN/proxy would be needed for that) + referrer
-  policy; **Dependabot** (`npm` + `github-actions`, weekly); deploy actions **SHA-pinned**;
+  policy; **Dependabot** version-updates (`npm` + `github-actions`, weekly, **majors ignored**) +
+  **security alerts & automated-security-fixes ENABLED** on the repo (2026-06-29 — vulnerability
+  monitoring was previously OFF; now on, auto-PRs real CVEs, bypasses ignore-majors). Standing
+  `npm audit` noise = 7 dev-tooling advisories (esbuild dev-server Win-only, yaml in @astrojs/check)
+  — unreachable by visitors, accepted (fix would force breaking Astro 7). deploy actions **SHA-pinned**;
   **/privacy page** (footer link, brand-truth PASS — honestly discloses Web3Forms + hCaptcha +
   the YouTube thumbnail-on-render). **⚠ Needs Travis's real-browser check: confirm hCaptcha still
   renders + submits under the CSP** (headless can't prove it; a wrong CSP domain breaks it silently).
