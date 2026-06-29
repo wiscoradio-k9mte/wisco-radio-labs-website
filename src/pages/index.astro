@@ -6,7 +6,7 @@ import PostCard from '../components/PostCard.astro';
 import { getCollection } from 'astro:content';
 import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
 import { withBase } from '../lib/link';
-import logo from '../assets/brand/wisco-radio-labs-logo.png';
+import logo from '../assets/brand/wisco-radio-labs-logo-transparent.png';
 import banner from '../assets/cw-trainer/WiscoRadioLabs-Banner.png';
 
 // Draft posts are hidden in prod; visible in dev so Travis can preview WIP.
@@ -42,8 +42,8 @@ const latestPosts = posts.slice(0, 3);
         <Image
           src={logo}
           alt=""
-          width={260}
-          height={260}
+          width={640}
+          height={640}
           class="hero-logo-img"
           loading="eager"
           decoding="async"
@@ -175,9 +175,9 @@ const latestPosts = posts.slice(0, 3);
   }
 
   .hero-logo-img {
-    width: clamp(140px, 20vw, 260px);
+    /* Transparent badge (no box) — bigger, and a larger floor so mobile reads well. */
+    width: clamp(200px, 46vw, 320px);
     height: auto;
-    border-radius: 50%;
   }
 
   /* ── Latest posts ── */
