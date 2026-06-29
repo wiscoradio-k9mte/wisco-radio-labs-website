@@ -18,28 +18,70 @@
  *   public/icons/icon-512.png        512×512 — Android splash / web-app
  *
  * Requires: sharp (bundled with astro; also listed in devDependencies).
+ *
+ * Font note (OG card):
+ *   The card uses Space Grotesk (display) and JetBrains Mono, both OFL-1.1.
+ *   TTF files live in scripts/fonts/ (committed for reproducible offline regen).
+ *   Sources:
+ *     github.com/floriankarsten/space-grotesk  → fonts/ttf/static/SpaceGrotesk-*.ttf
+ *     github.com/JetBrains/JetBrainsMono       → fonts/ttf/JetBrainsMono-SemiBold.ttf
+ *   librsvg (sharp's SVG engine) resolves fonts via fontconfig.  We point
+ *   FONTCONFIG_FILE at a minimal config written to a tmp dir at runtime —
+ *   this must happen before the first sharp(svgBuffer) call or librsvg will
+ *   fall back to system fonts.  The env var is read lazily by fontconfig, so
+ *   setting process.env.FONTCONFIG_FILE in JS before the first SVG render works.
+ *
+ *   If the brand fonts still don't render (e.g. a future librsvg version
+ *   eagerly caches fontconfig), the output will fall back to the system
+ *   sans-serif — the card degrades gracefully.  The next step up would be a
+ *   Puppeteer/Chromium renderer, which has full web-font support and is the
+ *   reliable alternative if librsvg proves too fragile.
  */
 
 import sharp from 'sharp';
-import { mkdir, readFile } from 'node:fs/promises';
+import { mkdir, readFile, mkdtemp, writeFile } from 'node:fs/promises';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { tmpdir } from 'node:os';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT       = join(__dirname, '..');
 const PUBLIC     = join(ROOT, 'public');
 const ICONS_DIR  = join(PUBLIC, 'icons');
+const FONTS_DIR  = join(__dirname, 'fonts');
 
 // ── Palette — exact tokens from design-system.md §2 ──────────────────────────
 // (Raw hex because this SVG is rasterized by librsvg, not rendered in a browser
 //  where CSS custom properties would resolve.)
 const BG         = '#0F1115';  // --bg dark
-const TOWER_BODY = '#2E3545';  // slightly lighter than --bg; gives the tower structure
 const AMBER      = '#E8821E';  // --brand
 const TEXT       = '#E8EAED';  // --text
 const TEXT_SEC   = '#A9B2C0';  // --text-secondary
 const TEXT_MUTE  = '#7C8694';  // --text-muted
 const BORDER     = '#2A2F3A';  // --border
+
+// ── 0. Font setup — configure fontconfig before any SVG render ────────────────
+//
+// Write a minimal fontconfig config pointing at scripts/fonts/ (the committed
+// TTF directory) so librsvg resolves "Space Grotesk" and "JetBrains Mono".
+// The config is written to a tmp dir at runtime so the path is always absolute.
+//
+async function prepareFontconfig() {
+  const cacheDir = await mkdtemp(join(tmpdir(), 'wrl-og-fonts-'));
+  const conf = `<?xml version="1.0"?>
+<!DOCTYPE fontconfig SYSTEM "fonts.dtd">
+<fontconfig>
+  <!-- Brand fonts committed at scripts/fonts/ (OFL-1.1): Space Grotesk + JetBrains Mono -->
+  <dir>${FONTS_DIR}</dir>
+  <cachedir>${cacheDir}</cachedir>
+</fontconfig>`;
+  const confPath = join(cacheDir, 'fonts.conf');
+  await writeFile(confPath, conf);
+  // Must be set before the first sharp SVG call — fontconfig reads lazily.
+  process.env.FONTCONFIG_FILE = confPath;
+  console.log('  Font config: Space Grotesk (display) + JetBrains Mono (mono)');
+  console.log(`  FONTCONFIG_FILE → ${confPath}`);
+}
 
 // ── 1. OG card SVG — 1200×630 ─────────────────────────────────────────────────
 //
@@ -63,6 +105,36 @@ const BORDER     = '#2A2F3A';  // --border
 //   Outer wave  (extended beyond favicon bounds for visual depth)
 //                                   → M40,143  Q220,238 400,143
 //
+// ── Lattice tower (truss mast) — matches the brand logo's tower, generated
+//    parametrically (center x=220) so the geometry is easy to tune. ──
+const TOWER_LINE = '#838B98'; // medium cool gray ≈ the logo's tower
+const towerLattice = (() => {
+  const cx = 220, yTop = 222, yBase = 408, halfTop = 7, halfBase = 58, levels = 7;
+  const half = (y) => halfTop + (halfBase - halfTop) * (y - yTop) / (yBase - yTop);
+  const L = (y) => +(cx - half(y)).toFixed(1), R = (y) => +(cx + half(y)).toFixed(1);
+  const ys = Array.from({ length: levels }, (_, i) => +(yTop + (yBase - yTop) * i / (levels - 1)).toFixed(1));
+  const line = (x1, y1, x2, y2, w, o = 1) =>
+    `  <line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${TOWER_LINE}" stroke-width="${w}" stroke-linecap="round"${o < 1 ? ` opacity="${o}"` : ''}/>\n`;
+  let s = '';
+  // Two converging legs
+  s += line(L(yTop), yTop, L(yBase), yBase, 3);
+  s += line(R(yTop), yTop, R(yBase), yBase, 3);
+  // Rungs + X cross-bracing per bay
+  for (let i = 0; i < levels; i++) {
+    const y = ys[i];
+    s += line(L(y), y, R(y), y, 2);
+    if (i < levels - 1) {
+      const y2 = ys[i + 1];
+      s += line(L(y), y, R(y2), y2, 1.6, 0.85);
+      s += line(R(y), y, L(y2), y2, 1.6, 0.85);
+    }
+  }
+  // Top mast to the beacon + splayed feet at the base
+  s += line(cx, yTop, cx, 188, 3);
+  s += line(L(yBase), yBase, L(yBase) - 15, yBase + 24, 3);
+  s += line(R(yBase), yBase, R(yBase) + 15, yBase + 24, 3);
+  return s;
+})();
 const OG_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
 
   <!-- Charcoal background -->
@@ -84,25 +156,19 @@ const OG_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630
   <path d="M130,231 Q220,291 310,231"
         stroke="${AMBER}" stroke-width="3.5" fill="none" stroke-linecap="round" opacity="0.9"/>
 
-  <!-- Beacon at tower tip -->
-  <circle cx="220" cy="180" r="13" fill="${AMBER}"/>
+  <!-- Lattice tower (truss mast — matches the logo), generated above -->
+${towerLattice}
+  <!-- Beacon at the mast tip -->
+  <circle cx="220" cy="176" r="11" fill="${AMBER}"/>
 
-  <!-- Tower body (A-frame with leg recesses) -->
-  <polygon
-    points="220,201 130,411 190,411 190,351 250,351 250,411 310,411"
-    fill="${TOWER_BODY}"/>
-
-  <!-- Ground legs extending below base corners -->
-  <line x1="130" y1="411" x2="95"  y2="457" stroke="${TOWER_BODY}" stroke-width="7" stroke-linecap="round"/>
-  <line x1="310" y1="411" x2="345" y2="457" stroke="${TOWER_BODY}" stroke-width="7" stroke-linecap="round"/>
-  <!-- Ground line -->
-  <line x1="80" y1="460" x2="360" y2="460" stroke="${BORDER}" stroke-width="2"/>
+  <!-- Ground line under the feet -->
+  <line x1="140" y1="434" x2="300" y2="434" stroke="${BORDER}" stroke-width="2"/>
 
   <!-- ── TEXT BLOCK (right column, x ≥ 420) ── -->
 
   <!-- Eyebrow: brand name in amber small-caps treatment -->
   <text x="422" y="242"
-        font-family="sans-serif" font-size="22" font-weight="600"
+        font-family="Space Grotesk, sans-serif" font-size="22" font-weight="600"
         letter-spacing="5" fill="${AMBER}">WISCO RADIO LABS</text>
 
   <!-- Short amber rule beneath eyebrow (brand device) -->
@@ -110,15 +176,15 @@ const OG_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630
 
   <!-- Main tagline — two lines for legibility at preview scale -->
   <text x="420" y="346"
-        font-family="sans-serif" font-size="62" font-weight="700"
+        font-family="Space Grotesk, sans-serif" font-size="62" font-weight="700"
         fill="${TEXT}">Ham radio,</text>
   <text x="420" y="422"
-        font-family="sans-serif" font-size="62" font-weight="700"
+        font-family="Space Grotesk, sans-serif" font-size="62" font-weight="700"
         fill="${TEXT}">built in the open.</text>
 
   <!-- Place tagline -->
   <text x="422" y="476"
-        font-family="sans-serif" font-size="27"
+        font-family="Space Grotesk, sans-serif" font-size="27"
         fill="${TEXT_SEC}">Made in the Driftless.</text>
 
   <!-- Bottom separator -->
@@ -126,10 +192,10 @@ const OG_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630
 
   <!-- Preview URL (left) and callsign (right) -->
   <text x="422" y="598"
-        font-family="sans-serif" font-size="19"
+        font-family="Space Grotesk, sans-serif" font-size="19"
         fill="${TEXT_MUTE}">wiscoradio-k9mte.github.io</text>
   <text x="1138" y="598"
-        font-family="monospace" font-size="22" font-weight="600"
+        font-family="JetBrains Mono, monospace" font-size="22" font-weight="600"
         fill="${AMBER}" text-anchor="end">K9MTE</text>
 
 </svg>`;
@@ -173,6 +239,9 @@ async function generateIcons() {
 }
 
 // ── Main ──────────────────────────────────────────────────────────────────────
+// Font setup MUST run before generateOgCard() — librsvg reads FONTCONFIG_FILE
+// lazily (on first SVG text render), so setting it here in time is what matters.
+await prepareFontconfig();
 await generateOgCard();
 await generateIcons();
 console.log('\nDone. Commit public/og-default.png and public/icons/ to the repo.');

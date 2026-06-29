@@ -90,6 +90,10 @@ const postSchema = JSON.stringify({
 
     <!-- Article body — Markdown rendered inside .prose -->
     <div class="article-body container">
+      <!-- Live region: announces copy-to-clipboard success to screen readers.
+           Injected once per page here rather than created dynamically so the
+           element is guaranteed present before the script runs. -->
+      <p id="prose-copy-status" role="status" aria-live="polite" aria-atomic="true" class="sr-only"></p>
       <div class="prose">
         <slot />
       </div>
@@ -114,6 +118,52 @@ const postSchema = JSON.stringify({
     </div>
   </article>
 </BaseLayout>
+
+<script>
+  // ── Blog code-block copy buttons ───────────────────────────────────────────
+  // Dynamically adds a "Copy" button to every <pre> inside .prose on a blog post.
+  // Reuses the same aria-live pattern as the Products install-card copy button.
+  // Does NOT touch the Products page — this script only fires on blog post pages
+  // (BlogPost.astro is only used there) and only looks at .prose pre elements.
+
+  const copyStatus = document.getElementById('prose-copy-status');
+
+  document.querySelectorAll<HTMLPreElement>('.prose pre').forEach(pre => {
+    const btn = document.createElement('button');
+    btn.className = 'prose-copy-btn';
+    btn.type = 'button';
+    btn.setAttribute('aria-label', 'Copy code block');
+    btn.innerHTML = '<span class="copy-label">Copy</span>';
+
+    btn.addEventListener('click', async () => {
+      // Prefer the <code> text; fall back to the whole <pre> if no <code> child.
+      const code = pre.querySelector('code');
+      const text = (code ?? pre).textContent ?? '';
+      const label = btn.querySelector<HTMLElement>('.copy-label');
+      try {
+        await navigator.clipboard.writeText(text);
+        if (label) {
+          label.textContent = 'Copied!';
+          setTimeout(() => { label.textContent = 'Copy'; }, 2000);
+        }
+        if (copyStatus) {
+          copyStatus.textContent = 'Code copied to clipboard.';
+          setTimeout(() => { copyStatus.textContent = ''; }, 2000);
+        }
+      } catch {
+        // Clipboard API unavailable — announce so AT users know to copy manually.
+        if (copyStatus) {
+          copyStatus.textContent = "Couldn't copy — select the code and copy it manually.";
+          setTimeout(() => { copyStatus.textContent = ''; }, 4000);
+        }
+      }
+    });
+
+    // Append inside <pre> and position absolutely — standard code-copy pattern.
+    pre.style.position = 'relative';
+    pre.appendChild(btn);
+  });
+</script>
 
 <style>
   .blog-article {
@@ -192,5 +242,52 @@ const postSchema = JSON.stringify({
   .back-link-wrap {
     margin-top: var(--space-8);
     font-size: var(--fs-small);
+  }
+
+  /* ── Code-block copy button ───────────────────────────────────────────────── */
+  /* Absolutely positioned inside <pre> (pre.style.position is set by script).
+     Matches the Products install card .copy-btn visually. */
+  :global(.prose-copy-btn) {
+    position: absolute;
+    top: var(--space-2);
+    right: var(--space-2);
+    display: flex;
+    align-items: center;
+    min-height: 32px;
+    padding: var(--space-1) var(--space-3);
+    background: var(--surface-1);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-sm);
+    color: var(--text-secondary);
+    font-family: var(--font-display);
+    font-size: var(--fs-caption);
+    font-weight: 500;
+    cursor: pointer;
+    /* Visible only on hover/focus so it doesn't crowd small code blocks.
+       Always visible for keyboard users (opacity stays 1 when focused). */
+    opacity: 0;
+    transition: opacity 150ms ease, background-color 150ms ease, color 150ms ease;
+  }
+
+  /* Show on pre hover, and always when the button itself is focused/active. */
+  :global(.prose pre:hover .prose-copy-btn),
+  :global(.prose-copy-btn:focus-visible),
+  :global(.prose-copy-btn:active) {
+    opacity: 1;
+  }
+
+  :global(.prose-copy-btn:hover) {
+    background: var(--brand-tint);
+    color: var(--brand-ink);
+    opacity: 1;
+  }
+
+  :global(.prose-copy-btn:focus-visible) {
+    outline: 3px solid var(--focus-ring);
+    outline-offset: 2px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    :global(.prose-copy-btn) { transition: none; }
   }
 </style>
