@@ -39,6 +39,9 @@ const { title = SITE_TITLE, description, image } = Astro.props;
         }
       })();
     </script>
+
+    <!-- Named slot for per-page head content (e.g. BlogPosting JSON-LD from BlogPost.astro). -->
+    <slot name="head" />
   </head>
   <body>
     <!-- Skip-to-content: first tab stop, visible on focus, jumps past the header -->

@@ -11,21 +11,38 @@ export async function GET(context) {
     import.meta.env.PROD ? !data.draft : true
   )).sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
 
-  // context.site = https://wiscoradio-k9mte.github.io (from astro.config site)
-  // import.meta.env.BASE_URL = /wisco-radio-labs-website/ (from astro.config base)
-  // We need item links to be full absolute URLs including the base.
-  const base = import.meta.env.BASE_URL.replace(/\/$/, ''); // /wisco-radio-labs-website
+  // context.site  = https://wiscoradio-k9mte.github.io  (from astro.config site)
+  // BASE_URL      = /wisco-radio-labs-website/ or /wisco-radio-labs-website (Astro strips or keeps the slash)
+  //
+  // The RSS channel <link> should be the site's HTML home URL, including the base path.
+  // Item links are root-absolute paths (starting with /wisco-radio-labs-website/…);
+  // @astrojs/rss prepends context.site.origin to them to form absolute URLs.
+  const base        = import.meta.env.BASE_URL.replace(/\/$/, ''); // /wisco-radio-labs-website
+  // Build the canonical site root with a guaranteed trailing slash.
+  const siteWithBase = context.site.href.replace(/\/$/, '') + base + '/';
+  // = https://wiscoradio-k9mte.github.io/wisco-radio-labs-website/
 
   return rss({
     title: SITE_TITLE,
     description: SITE_DESCRIPTION,
-    site: context.site,
+    // Use the full URL (origin + base) as the channel <link> so RSS readers
+    // surface the correct home page, not just the bare origin.
+    site: siteWithBase,
     items: posts.map(post => ({
       title: post.data.title,
       pubDate: post.data.pubDate,
       description: post.data.description,
+      // Root-absolute paths work: @astrojs/rss prepends context.site.origin to them.
       link: `${base}/blog/${post.id}/`,
     })),
-    customData: '<language>en-us</language>',
+    xmlns: {
+      // Atom self-link namespace — adds xmlns:atom to the root <rss> element.
+      atom: 'http://www.w3.org/2005/Atom',
+    },
+    customData: [
+      '<language>en-us</language>',
+      `<atom:link href="${siteWithBase}rss.xml" rel="self" type="application/rss+xml"/>`,
+      '<managingEditor>K9MTE (Travis Engh)</managingEditor>',
+    ].join('\n    '),
   });
 }

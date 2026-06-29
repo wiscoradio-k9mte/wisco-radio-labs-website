@@ -8,7 +8,8 @@
     "preview": "astro preview",
     "astro": "astro",
     "test": "vitest run",
-    "test:links": "node scripts/check-links.mjs"
+    "test:links": "node scripts/check-links.mjs",
+    "generate:assets": "node scripts/generate-brand-assets.mjs"
   },
   "dependencies": {
     "@astrojs/check": "^0.9.9",
@@ -25,6 +26,7 @@
     "typescript": "^6.0.3"
   },
   "devDependencies": {
+    "sharp": "^0.34.5",
     "vitest": "^4.1.9"
   }
 }
