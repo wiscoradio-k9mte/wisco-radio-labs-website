@@ -54,7 +54,6 @@ const FONTS_DIR  = join(__dirname, 'fonts');
 // (Raw hex because this SVG is rasterized by librsvg, not rendered in a browser
 //  where CSS custom properties would resolve.)
 const BG         = '#0F1115';  // --bg dark
-const TOWER_BODY = '#2E3545';  // slightly lighter than --bg; gives the tower structure
 const AMBER      = '#E8821E';  // --brand
 const TEXT       = '#E8EAED';  // --text
 const TEXT_SEC   = '#A9B2C0';  // --text-secondary
@@ -106,6 +105,36 @@ async function prepareFontconfig() {
 //   Outer wave  (extended beyond favicon bounds for visual depth)
 //                                   → M40,143  Q220,238 400,143
 //
+// ── Lattice tower (truss mast) — matches the brand logo's tower, generated
+//    parametrically (center x=220) so the geometry is easy to tune. ──
+const TOWER_LINE = '#838B98'; // medium cool gray ≈ the logo's tower
+const towerLattice = (() => {
+  const cx = 220, yTop = 222, yBase = 408, halfTop = 7, halfBase = 58, levels = 7;
+  const half = (y) => halfTop + (halfBase - halfTop) * (y - yTop) / (yBase - yTop);
+  const L = (y) => +(cx - half(y)).toFixed(1), R = (y) => +(cx + half(y)).toFixed(1);
+  const ys = Array.from({ length: levels }, (_, i) => +(yTop + (yBase - yTop) * i / (levels - 1)).toFixed(1));
+  const line = (x1, y1, x2, y2, w, o = 1) =>
+    `  <line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${TOWER_LINE}" stroke-width="${w}" stroke-linecap="round"${o < 1 ? ` opacity="${o}"` : ''}/>\n`;
+  let s = '';
+  // Two converging legs
+  s += line(L(yTop), yTop, L(yBase), yBase, 3);
+  s += line(R(yTop), yTop, R(yBase), yBase, 3);
+  // Rungs + X cross-bracing per bay
+  for (let i = 0; i < levels; i++) {
+    const y = ys[i];
+    s += line(L(y), y, R(y), y, 2);
+    if (i < levels - 1) {
+      const y2 = ys[i + 1];
+      s += line(L(y), y, R(y2), y2, 1.6, 0.85);
+      s += line(R(y), y, L(y2), y2, 1.6, 0.85);
+    }
+  }
+  // Top mast to the beacon + splayed feet at the base
+  s += line(cx, yTop, cx, 188, 3);
+  s += line(L(yBase), yBase, L(yBase) - 15, yBase + 24, 3);
+  s += line(R(yBase), yBase, R(yBase) + 15, yBase + 24, 3);
+  return s;
+})();
 const OG_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
 
   <!-- Charcoal background -->
@@ -127,19 +156,13 @@ const OG_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630
   <path d="M130,231 Q220,291 310,231"
         stroke="${AMBER}" stroke-width="3.5" fill="none" stroke-linecap="round" opacity="0.9"/>
 
-  <!-- Beacon at tower tip -->
-  <circle cx="220" cy="180" r="13" fill="${AMBER}"/>
+  <!-- Lattice tower (truss mast — matches the logo), generated above -->
+${towerLattice}
+  <!-- Beacon at the mast tip -->
+  <circle cx="220" cy="176" r="11" fill="${AMBER}"/>
 
-  <!-- Tower body (A-frame with leg recesses) -->
-  <polygon
-    points="220,201 130,411 190,411 190,351 250,351 250,411 310,411"
-    fill="${TOWER_BODY}"/>
-
-  <!-- Ground legs extending below base corners -->
-  <line x1="130" y1="411" x2="95"  y2="457" stroke="${TOWER_BODY}" stroke-width="7" stroke-linecap="round"/>
-  <line x1="310" y1="411" x2="345" y2="457" stroke="${TOWER_BODY}" stroke-width="7" stroke-linecap="round"/>
-  <!-- Ground line -->
-  <line x1="80" y1="460" x2="360" y2="460" stroke="${BORDER}" stroke-width="2"/>
+  <!-- Ground line under the feet -->
+  <line x1="140" y1="434" x2="300" y2="434" stroke="${BORDER}" stroke-width="2"/>
 
   <!-- ── TEXT BLOCK (right column, x ≥ 420) ── -->
 

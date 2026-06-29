@@ -330,6 +330,12 @@ import screenshotCopy from '../../assets/cw-trainer/WiscoRadioLabs-Copy.png';
   if (!lightbox || !lightboxClose || !lightboxImg) {
     console.warn('Lightbox: missing required elements');
   } else {
+    // The dialog must NOT remain inside #main: openLightbox() sets #main `inert`, and `inert`
+    // is inherited — a dialog inside the inert subtree inerts itself (focus + clicks go dead,
+    // leaving mobile users with no way to close it). It's position:fixed, so reparenting to
+    // <body> changes nothing visually but takes it out of the inert subtree.
+    if (lightbox.parentElement !== document.body) document.body.appendChild(lightbox);
+
     const FOCUSABLE = 'button:not([disabled]), a[href], [tabindex]:not([tabindex="-1"])';
     let activeTrigger: HTMLButtonElement | null = null;
 
