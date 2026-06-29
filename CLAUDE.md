@@ -71,9 +71,23 @@ the Driftless."
   Lighthouse mobile healthy).
 - Deploy: GitHub Actions → GitHub Pages (set up at build time).
 
-## Current status (2026-06-28) — INTAKE COMPLETE, scaffolding
-Profile set and confirmed at intake. Local folder + brief created; git initialized.
-GitHub repo **not yet created** (awaiting Travis's go — firm checkpoint). No build yet.
+## Current status (2026-06-29) — v1 BUILT + GATED, PREVIEW LIVE, awaiting Travis's review
+Full team flow done: architect → web-designer → implementer → **test-qa PASS** (gate bit:
+caught a non-biting draft test + a vacuous link test, both fixed). Astro 6 static site, all
+5 sections, dark/light w/ no-flash init, mobile-first reading, seed post, CW Trainer product
+page (real banner + screenshots), Formspree contact form, RSS+sitemap. 12 unit tests + a
+`test:links` base-path/draft gate wired into CI. **Live preview:**
+https://wiscoradio-k9mte.github.io/wisco-radio-labs-website/ (verified HTTP 200 on all routes,
+base-path clean, `noindex` on).
+- **Repo is PUBLIC** (Travis's call 2026-06-29 — free-plan Pages needs public for a private
+  repo to deploy; reversible). `PREVIEW_NOINDEX=true` keeps it out of search until go-live.
+- Deploys from **`feature/initial-build`** via GH Actions (env branch-policy allows it). Flip
+  the workflow trigger + `github-pages` env to `main` after Travis approves and it merges.
+- **NOT merged to main** — main holds only the scaffold; the built site is the feature branch
+  pending Travis's review (branch discipline: main blessed only after his approval, via PR).
+- Manager decisions on record: theme toggle/drawer are plain `.astro`+module scripts (NOT React
+  islands — no-flash init can't be an island; @astrojs/react installed, reserved for a future
+  tag filter); analytics OFF until domain go-live; marketing stays dark (working copy by team).
 
 ## What v1 must prove
 A fast, modern, **genuinely pleasant-to-read-on-a-phone** site with the five sections in
@@ -82,8 +96,14 @@ seed post** so it isn't empty), a CW Trainer Products page, an About page (photo
 and a working Contact form — dark-first with a clean light toggle, on the `*.github.io`
 preview, ready for a domain when Travis is.
 
-## Open decisions / pending from Travis
-- About-page photo (Travis to supply).
-- Real article content (Travis writes over time; we seed one sample post).
-- Domain name + registration (deferred to go-live; not part of the build).
-- Exact social/QRZ links + contact email for the Contact page.
+## Open decisions / pending from Travis (all isolated to src/consts.ts — one-line swaps)
+- **Formspree form ID** — create the form at formspree.io, paste ID into `FORMSPREE_ID`
+  (contact form is wired but posts to a PLACEHOLDER until then).
+- **About-page photo** — branded placeholder slot in place; swap at one point.
+- **Public contact email** — `CONTACT_EMAIL` empty; confirm if `wiscoradio@gmail.com` is it.
+- **YouTube channel URL** — `SOCIAL_LINKS.youtube` empty until Travis has one.
+- Real article content (Travis writes over time; one seed post shipped).
+- Domain name + registration (deferred to go-live; not part of the build). At go-live: set
+  `site`+drop `base` in astro.config, add `public/CNAME`, flip `PREVIEW_NOINDEX=false`, wire
+  analytics, switch deploy trigger/env to `main`.
+- Travis's review feedback on look/feel + mobile read quality on a real phone (his bar).
