@@ -40,6 +40,9 @@ const isPlaceholder = WEB3FORMS_KEY === 'PLACEHOLDER_WEB3FORMS_KEY';
     <!-- Web3Forms access key (required) -->
     <input type="hidden" name="access_key" value={WEB3FORMS_KEY} />
 
+    <!-- Display name shown in the notification email's sender field. -->
+    <input type="hidden" name="from_name" value="Wisco Radio Labs — Contact" />
+
     <!-- Web3Forms honeypot — bots check it; legit users never see it -->
     <div class="honeypot" aria-hidden="true">
       <label for="botcheck-field">Leave this unchecked</label>

@@ -1,0 +1,132 @@
+---
+// Privacy — plain-language note on data handling.
+// Covers only what's actually true today: Web3Forms contact form, hCaptcha, click-to-load
+// YouTube embeds (player + cookies wait for click; the preview thumbnail loads from YouTube on
+// render), localStorage theme preference, and no analytics.
+// Keep this in sync with the real implementation — brand-truth gate governs copy here.
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { CONTACT_EMAIL } from '../consts';
+import { withBase } from '../lib/link';
+---
+<BaseLayout
+  title="Privacy"
+  description="How Wisco Radio Labs handles data — no tracking, no analytics. The contact form goes through Web3Forms and hCaptcha; blog video thumbnails load from YouTube. Details inside."
+>
+  <section class="section container privacy-section">
+
+    <h1 class="page-title">Privacy &amp; Data Handling</h1>
+    <p class="page-lead">
+      Short version: no tracking, no ad tech, no analytics. The main thing that moves is what
+      you send through the contact form — and the few third parties involved (the form processor,
+      its spam check, and YouTube for video thumbnails) are spelled out below.
+    </p>
+    <p class="last-updated">Last updated: 2026-06-29</p>
+
+    <div class="privacy-prose">
+
+      <h2>The contact form</h2>
+      <p>
+        If you use the contact form, it collects your name, email address, subject, and
+        message. That gets sent to <strong>Web3Forms</strong> — a third-party form
+        processor — which delivers it to my email. Nothing is stored on this site.
+        I use it only to reply to you.
+      </p>
+
+      <h2>Spam protection (hCaptcha)</h2>
+      <p>
+        The form uses <strong>hCaptcha</strong> to keep bots out. Completing the challenge
+        may share some technical data with Intuition Machines (the company behind hCaptcha)
+        to verify you're human. See their
+        <a href="https://www.hcaptcha.com/privacy" rel="noopener noreferrer" target="_blank">privacy policy</a>.
+      </p>
+
+      <h2>Video</h2>
+      <p>
+        Blog videos use a click-to-load wrapper: the YouTube player doesn't load, and YouTube
+        sets no cookies, until you click play. Before that, the one thing fetched from YouTube is
+        the preview thumbnail image (from its image servers), so YouTube does see your IP for that
+        image. Press play and the full player loads, with YouTube's own cookies and policies.
+      </p>
+
+      <h2>Tracking</h2>
+      <p>
+        None. No analytics, no tracking cookies, no ad tech.
+      </p>
+
+      <h2>Your browser</h2>
+      <p>
+        The only thing stored in your browser is your light/dark theme preference —
+        saved in localStorage, on your device. That's it.
+      </p>
+
+      <h2>Questions</h2>
+      <p>
+        Anything unclear? Use the <a href={withBase('/contact/')}>Contact page</a>
+        {CONTACT_EMAIL && <>{' '}or email me at <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a></>}.
+      </p>
+
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .privacy-section {
+    padding-bottom: var(--space-12);
+  }
+
+  .page-title {
+    font-size: var(--fs-h1);
+    margin: 0 0 var(--space-4);
+  }
+
+  .page-lead {
+    color: var(--text-secondary);
+    font-size: var(--fs-body);
+    max-width: 60ch;
+    margin: 0 0 var(--space-3);
+  }
+
+  .last-updated {
+    font-size: var(--fs-small);
+    color: var(--text-muted);
+    margin: 0 0 var(--space-8);
+  }
+
+  /* Prose body: capped width for readability, consistent spacing between sections. */
+  .privacy-prose {
+    max-width: var(--measure);
+  }
+
+  .privacy-prose h2 {
+    font-size: var(--fs-h3);
+    margin: var(--space-8) 0 var(--space-3);
+    color: var(--text);
+  }
+
+  /* Remove top margin from the first section heading so it sits flush under the date. */
+  .privacy-prose h2:first-child {
+    margin-top: 0;
+  }
+
+  .privacy-prose p {
+    color: var(--text);
+    line-height: 1.7;
+    margin: 0 0 var(--space-4);
+    font-size: var(--fs-body);
+  }
+
+  .privacy-prose a {
+    color: var(--brand-ink);
+    text-decoration: underline;
+  }
+
+  .privacy-prose a:hover {
+    color: var(--brand);
+  }
+
+  .privacy-prose a:focus-visible {
+    outline: 3px solid var(--focus-ring);
+    outline-offset: 2px;
+    border-radius: var(--radius-sm);
+  }
+</style>

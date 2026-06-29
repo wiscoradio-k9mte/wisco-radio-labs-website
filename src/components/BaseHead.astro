@@ -31,6 +31,50 @@ const siteRoot = `${siteOrigin}${withBase('/')}`;
 
 const pageTitle = title === SITE_TITLE ? title : `${title} — ${SITE_TITLE}`;
 
+// ── Content-Security-Policy (meta-equiv; GitHub Pages can't set real HTTP headers) ──
+// Source lists are deliberate — every entry maps to something the page legitimately loads.
+// Getting a domain wrong silently breaks the contact captcha, so each is justified:
+//   script-src  web3forms.com         → the Web3Forms client/script.js that renders the widget
+//               hcaptcha.com/*        → hCaptcha's own JS (per hCaptcha CSP docs; wildcard is
+//                                       REQUIRED — they rotate asset subdomains, do not hard-pin)
+//               'unsafe-inline'       → see tradeoff note below
+//   style-src   hcaptcha.com/*        → hCaptcha injects its widget styles
+//   connect-src api.web3forms.com     → the form's JSON submit (fetch)
+//               hcaptcha.com/*        → hCaptcha challenge XHRs
+//   frame-src   hcaptcha.com/*        → the captcha challenge iframe
+//               youtube-nocookie/youtube → the click-to-load vlog facade (lite-youtube)
+//   form-action api.web3forms.com     → the no-JS native POST fallback
+//   img-src     data: https:         → YouTube poster thumbnails (i.ytimg.com), OG, inline SVG/data
+//
+// TRADEOFF — script-src/style-src use 'unsafe-inline' rather than per-script hashes/nonces.
+// Why: this page has runtime-injected inline scripts and styles we cannot hash at build time —
+// hCaptcha's client script injects its own <script>/<style>, and astro-embed's <lite-youtube>
+// web component injects inline styles. Astro's static output also can't mint a per-request nonce.
+// Hashing only the scripts we author (the no-flash theme init, the captcha-theme matcher, the
+// JSON-LD blocks) would still force 'unsafe-inline' for the third-party ones, so a hash list
+// would add maintenance burden for no net gain. Residual risk: 'unsafe-inline' weakens XSS
+// containment — acceptable here because this is a static site with no user accounts, no
+// server-rendered user input, and no reflected/stored content surface to inject through.
+//
+// LIMITATIONS of meta-CSP: frame-ancestors, report-to/report-uri, and sandbox are ignored when
+// delivered via <meta> — they only work as real headers, which GitHub Pages cannot send. So
+// clickjacking protection (frame-ancestors) is NOT enforced. Residual risk is low (no auth, no
+// state-changing same-origin actions to frame); revisit if the site ever moves behind a CDN/proxy
+// that can set headers. upgrade-insecure-requests IS honored in meta and is included.
+const csp = [
+  "default-src 'self'",
+  "base-uri 'self'",
+  "object-src 'none'",
+  "script-src 'self' 'unsafe-inline' https://web3forms.com https://hcaptcha.com https://*.hcaptcha.com",
+  "style-src 'self' 'unsafe-inline' https://hcaptcha.com https://*.hcaptcha.com",
+  "img-src 'self' data: https:",
+  "font-src 'self'",
+  "connect-src 'self' https://api.web3forms.com https://hcaptcha.com https://*.hcaptcha.com",
+  "frame-src https://hcaptcha.com https://*.hcaptcha.com https://www.youtube-nocookie.com https://www.youtube.com",
+  "form-action 'self' https://api.web3forms.com",
+  'upgrade-insecure-requests',
+].join('; ');
+
 // JSON-LD: Organization + WebSite — present on every page.
 // Only true facts: real name, real URL, real founder callsign.
 const siteSchema = JSON.stringify([
@@ -62,6 +106,15 @@ const siteSchema = JSON.stringify([
 
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+<!-- Content-Security-Policy (meta-equiv). Placed early so it governs every later inline
+     script/style and resource in document order. Source lists + tradeoffs documented in
+     the frontmatter above. NOTE: GitHub Pages cannot set real HTTP headers, so header-only
+     directives (frame-ancestors, report-to) are not available here. -->
+<meta http-equiv="Content-Security-Policy" content={csp} />
+
+<!-- Referrer-Policy: send origin only on cross-origin, and nothing on HTTPS→HTTP downgrade. -->
+<meta name="referrer" content="strict-origin-when-cross-origin" />
 
 <title>{pageTitle}</title>
 <meta name="description" content={description} />
