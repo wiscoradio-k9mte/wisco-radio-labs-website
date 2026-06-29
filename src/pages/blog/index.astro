@@ -24,11 +24,13 @@ const allTags = [...new Set(allPosts.flatMap(p => p.data.tags))].sort();
       I'm making in the Driftless.
     </p>
 
-    <!-- Category chips (static in v1; React island tag filter is the future upgrade) -->
+    <!-- Topic labels (static in v1 — non-interactive; React island tag filter is the future upgrade).
+         Rendered as plain labels, not links, so there are no dead affordances. -->
     {allTags.length > 0 && (
-      <div class="filter-row" role="list" aria-label="Filter by tag">
+      <div class="topics-row">
+        <span class="topics-label">Topics:</span>
         {allTags.map(tag => (
-          <span class="tag" role="listitem">{tag}</span>
+          <span class="tag-label">{tag}</span>
         ))}
       </div>
     )}
@@ -36,6 +38,10 @@ const allTags = [...new Set(allPosts.flatMap(p => p.data.tags))].sort();
     <!-- Subtle signal-wave divider between header and posts.
          Decorative only — restrained at low opacity per the design system. -->
     <SignalWave height={40} opacity={0.18} />
+
+    <!-- h2 bridges the h1 "Blog" → h3 post-card-title gap in the heading outline.
+         Visually hidden since the page title + lead already describe the section. -->
+    <h2 class="sr-only">All posts</h2>
 
     <!-- Post grid -->
     {allPosts.length > 0 ? (
@@ -90,18 +96,32 @@ const allTags = [...new Set(allPosts.flatMap(p => p.data.tags))].sort();
     margin: 0 0 var(--space-6);
   }
 
-  .filter-row {
+  /* Topics row — static labels; no hover, no pointer so they don't imply interactivity */
+  .topics-row {
     display: flex;
     flex-wrap: wrap;
+    align-items: center;
     gap: var(--space-2);
     margin-bottom: var(--space-6);
   }
 
-  /* Tag chips are min 48px tall via padding so they're tappable even if they look small */
-  .filter-row .tag {
-    min-height: 48px;
+  .topics-label {
+    font-size: var(--fs-small);
+    font-weight: 500;
+    color: var(--text-secondary);
+    margin-right: var(--space-1);
+  }
+
+  /* tag-label mirrors the .tag visual but without hover/transition — it's not a control */
+  .tag-label {
     display: inline-flex;
     align-items: center;
+    padding: var(--space-1) var(--space-3);
+    background-color: var(--surface-2);
+    color: var(--text-secondary);
+    font-size: var(--fs-caption);
+    font-family: var(--font-body);
+    border-radius: var(--radius-pill);
   }
 
   .posts-grid {

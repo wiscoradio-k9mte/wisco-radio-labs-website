@@ -14,15 +14,15 @@ That's the short version of what Wisco Radio Labs is. This is the longer one.
 
 I'm Travis Engh, K9MTE. I've been interested in amateur radio for a while, but the thing that finally got me to actually do something with it was Morse code — specifically, wanting to learn it the right way and being frustrated with the tools I found.
 
-Most CW training apps teach you dots and dashes. That's not how it works on the air. You don't copy code by mentally assembling "dit-dah-dit — that's an R." You copy it by recognizing R as a sound, the same way you recognize a word in spoken language without spelling it out. The Koch method gets at this — start with just two characters, drill them until they're instinctive, then add more. That's what the CW Trainer does.
+Most CW (Morse code) training apps teach you dots and dashes. That's not how it works on the air. You don't copy code by mentally assembling "dit-dah-dit — that's an R." You copy it by recognizing R as a sound, the same way you recognize a word in spoken language without spelling it out. The Koch method gets at this — start with just two characters, drill them until they're instinctive, then add more. That's what the CW Trainer does.
 
 So I built it. Then I built it again better. Then I shipped it on Linux.
 
 ## The CW Trainer
 
-The [CW Trainer](/products/) is the first product out of Wisco Radio Labs. It's live on the Snap Store at v2.3.0 — Koch-method lessons, copy and sending practice (including graded fist feedback), and a QSO simulator for POTA, SOTA, IOTA, and ragchew contacts.
+The [CW Trainer](/products/) is the first product out of Wisco Radio Labs. It's live on the Snap Store (the Linux app store) at v2.3.0 — Koch-method lessons, copy and sending practice (including graded fist — your sending rhythm — feedback), and a QSO (radio contact) simulator for POTA, SOTA, and IOTA (Parks, Summits, and Islands on the Air) activations and ragchew (casual on-air chat) contacts.
 
-It's fully offline. Free. Open source under GPL-3.0.
+It's fully offline. Free. Open source under GPL-3.0-or-later.
 
 ```
 snap install wr-cw-trainer
@@ -38,4 +38,4 @@ The Driftless Area of southwest Wisconsin is a specific place: old hills and riv
 
 More projects are in progress. I'll write about them here.
 
-73 de K9MTE
+73 (best regards) de K9MTE

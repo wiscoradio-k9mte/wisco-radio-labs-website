@@ -14,20 +14,19 @@ export const NAV_ITEMS = [
   { label: 'Contact', href: '/contact/' },
 ] as const;
 
-// Formspree form endpoint.
-// TODO: replace with the real form ID from formspree.io/f/<ID> once Travis creates the form.
-export const FORMSPREE_ID = 'PLACEHOLDER_FORM_ID';
+// Web3Forms submission key.
+// Replace PLACEHOLDER_WEB3FORMS_KEY with the real access_key from web3forms.com once created.
+// While this is the placeholder, the contact page shows a mailto fallback instead of the form.
+export const WEB3FORMS_KEY = 'PLACEHOLDER_WEB3FORMS_KEY';
 
-// Contact email.
-// TODO: confirm with Travis whether wiscoradio@gmail.com is the public contact, then set it here.
-export const CONTACT_EMAIL = ''; // PLACEHOLDER — leave empty until confirmed
+// Contact email — used in the mailto fallback and form error messages.
+export const CONTACT_EMAIL = 'wiscoradio@gmail.com';
 
 // Social / external links. Render only the ones with non-empty values (see Footer, Contact).
 export const SOCIAL_LINKS = {
-  // TODO: fill in once Travis confirms these.
-  qrz: 'https://www.qrz.com/db/K9MTE', // QRZ profile — public, safe to ship
-  youtube: '', // PLACEHOLDER
-  github: 'https://github.com/wiscoradio-k9mte', // public org
+  qrz: 'https://www.qrz.com/db/K9MTE',
+  youtube: 'https://www.youtube.com/@Wisco-Radio-K9MTE',
+  github: 'https://github.com/wiscoradio-k9mte',
 } as const;
 
 // Analytics insertion point.
