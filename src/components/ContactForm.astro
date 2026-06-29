@@ -125,7 +125,7 @@ const isPlaceholder = WEB3FORMS_KEY === 'PLACEHOLDER_WEB3FORMS_KEY';
          Web3Forms rejects the submission. Rendered zero-config from data-captcha by the
          Web3Forms client script (loaded after the form); the token rides along in FormData. -->
     <div class="form-field form-captcha">
-      <div class="h-captcha" data-captcha="true" data-theme="dark"></div>
+      <div class="h-captcha" data-captcha="true"></div>
       <p class="form-error" id="contact-captcha-error" role="alert" hidden>
         Please complete the captcha so I know you're human.
       </p>
@@ -156,6 +156,16 @@ const isPlaceholder = WEB3FORMS_KEY === 'PLACEHOLDER_WEB3FORMS_KEY';
       )}
     </div>
   </form>
+  <!-- Match the hCaptcha widget to the theme the visitor loaded the page in.
+       Runs synchronously during parse — sets data-theme on the .h-captcha div BEFORE the
+       async Web3Forms script below renders the widget (which reads that attribute). -->
+  <script is:inline>
+    (function () {
+      var el = document.querySelector('.h-captcha');
+      var theme = document.documentElement.getAttribute('data-theme');
+      if (el && (theme === 'light' || theme === 'dark')) el.setAttribute('data-theme', theme);
+    })();
+  </script>
   <!-- Web3Forms client script: renders the hCaptcha widget with their shared sitekey. -->
   <script is:inline src="https://web3forms.com/client/script.js" async defer></script>
   </Fragment>
