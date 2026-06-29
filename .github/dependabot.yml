@@ -1,0 +1,27 @@
+# Dependabot — keep dependencies and CI actions current.
+# Two ecosystems: npm (the site's build deps) and github-actions (the deploy workflow).
+# Weekly cadence; grouped to avoid a flood of single-bump PRs.
+version: 2
+updates:
+  # npm: the Astro build toolchain + runtime deps (astro-embed, @fontsource, etc.).
+  # npm audit is clean today, so most of these are version (not security) updates.
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      # Batch routine version bumps into one tested PR rather than N lockfile-conflicting branches.
+      npm-minor-patch:
+        update-types:
+          - minor
+          - patch
+
+  # github-actions: the deploy workflow pins actions to SHAs; Dependabot proposes new SHAs.
+  # Verify each new SHA against its claimed version tag before merging — a bumped pin can
+  # carry a comment that lies about the version (a hidden major jump).
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
