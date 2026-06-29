@@ -1,10 +1,14 @@
 # Dependabot — keep dependencies and CI actions current.
 # Two ecosystems: npm (the site's build deps) and github-actions (the deploy workflow).
 # Weekly cadence; grouped to avoid a flood of single-bump PRs.
+#
+# Major-version bumps are IGNORED on purpose: a breaking major (e.g. Astro 6 -> 7, or a major
+# action bump that undoes a deliberate SHA pin) is a planned upgrade project, not a weekly nudge.
+# Minor/patch updates AND Dependabot security updates still come through. Re-enable majors by
+# removing the `ignore` blocks if we ever want that visibility.
 version: 2
 updates:
-  # npm: the Astro build toolchain + runtime deps (astro-embed, @fontsource, etc.).
-  # npm audit is clean today, so most of these are version (not security) updates.
+  # npm: the Astro build toolchain + runtime deps (astro-embed, @fontsource, sharp, etc.).
   - package-ecosystem: npm
     directory: /
     schedule:
@@ -16,12 +20,18 @@ updates:
         update-types:
           - minor
           - patch
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
 
   # github-actions: the deploy workflow pins actions to SHAs; Dependabot proposes new SHAs.
   # Verify each new SHA against its claimed version tag before merging — a bumped pin can
-  # carry a comment that lies about the version (a hidden major jump).
+  # carry a comment that lies about the version. Major action bumps are ignored (see above).
   - package-ecosystem: github-actions
     directory: /
     schedule:
       interval: weekly
     open-pull-requests-limit: 5
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
