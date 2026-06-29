@@ -159,16 +159,9 @@ const isPlaceholder = WEB3FORMS_KEY === 'PLACEHOLDER_WEB3FORMS_KEY';
       )}
     </div>
   </form>
-  <!-- Match the hCaptcha widget to the theme the visitor loaded the page in.
-       Runs synchronously during parse — sets data-theme on the .h-captcha div BEFORE the
-       async Web3Forms script below renders the widget (which reads that attribute). -->
-  <script is:inline>
-    (function () {
-      var el = document.querySelector('.h-captcha');
-      var theme = document.documentElement.getAttribute('data-theme');
-      if (el && (theme === 'light' || theme === 'dark')) el.setAttribute('data-theme', theme);
-    })();
-  </script>
+  <!-- The hCaptcha widget renders in hCaptcha's default (light) theme by choice — the white
+       box reads as a deliberate, high-contrast element. (A data-theme match attempt had no
+       effect; Web3Forms' zero-config renderer doesn't honor it, so that code was removed.) -->
   <!-- Web3Forms client script: renders the hCaptcha widget with their shared sitekey. -->
   <script is:inline src="https://web3forms.com/client/script.js" async defer></script>
   </Fragment>

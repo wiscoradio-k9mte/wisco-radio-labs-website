@@ -71,7 +71,9 @@ gloss pass worked (reachable newcomers rose: Tariq 3→4, Hassan 2→3; expert h
   none rehearse the full QSO) — competitors researched (Morse Elmer / MorseMania) but **NOT named**
   per Travis. Brand-truth PASS.
 - **Contact form DONE + VERIFIED (2026-06-29):** hCaptcha enabled in the Web3Forms dashboard
-  (advanced filter + strict) + widget wired into `ContactForm.astro` (theme-matched to the site;
+  (advanced filter + strict) + widget wired into `ContactForm.astro` (renders in hCaptcha's
+  default LIGHT theme by choice — Travis likes the high-contrast white box; a data-theme match
+  attempt had no effect and was removed;
   token rides along in the FormData submit). **End-to-end test PASSED** — real submission lands in
   `wiscoradio@gmail.com` (after a one-time Gmail "never spam" filter; from_name = "Wisco Radio
   Labs — Contact"). Fully working.
