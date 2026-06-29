@@ -1,6 +1,7 @@
 ---
 // BlogPost.astro — article frame.
 // Wraps BaseLayout, adds: hero image, eyebrow, H1, meta row, optional YouTube embed, prose slot.
+// Also injects BlogPosting JSON-LD into <head> via the named "head" slot in BaseLayout.
 import { Image } from 'astro:assets';
 import BaseLayout from './BaseLayout.astro';
 import FormattedDate from '../components/FormattedDate.astro';
@@ -19,11 +20,37 @@ interface Props {
 
 const { title, description, pubDate, updatedDate, heroImage, tags = [], youtube } = Astro.props;
 
+// JSON-LD: BlogPosting — per-article, injected into <head> via BaseLayout's head slot.
+// Astro.url.href is the canonical URL for this post (site + base + slug, already correct).
+const postSchema = JSON.stringify({
+  '@context': 'https://schema.org',
+  '@type': 'BlogPosting',
+  headline: title,
+  description,
+  datePublished: pubDate.toISOString(),
+  ...(updatedDate ? { dateModified: updatedDate.toISOString() } : {}),
+  url: Astro.url.href,
+  ...(tags.length > 0 ? { keywords: tags.join(', ') } : {}),
+  author: {
+    '@type': 'Person',
+    name: 'Travis Engh',
+    callSign: 'K9MTE',
+  },
+  publisher: {
+    '@type': 'Organization',
+    name: 'Wisco Radio Labs',
+  },
+});
+
 // Rough reading time: ~200 wpm. We don't have word count at layout render time,
 // but the slot content will fill it. Omit estimate for now (accurate word count
 // would need a remark plugin — noted as a future nice-to-have).
 ---
 <BaseLayout title={title} description={description}>
+  <!-- BlogPosting JSON-LD injected into <head> via BaseLayout's named slot.
+       is:inline silences the Astro hint — intentionally a raw JSON block. -->
+  <script is:inline type="application/ld+json" slot="head" set:html={postSchema} />
+
   <article class="blog-article">
     <!-- Hero image (full width, above the title) -->
     {heroImage && (
