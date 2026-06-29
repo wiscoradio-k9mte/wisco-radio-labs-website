@@ -36,7 +36,8 @@ never pretending.
 ## DON'T — translating his fiction to the brand
 Travis's fiction is raw, profane, and goes to dark places. The public brand keeps the
 *spirit* of that honesty and humor and drops:
-- **No profanity.** The realness comes from specificity and candor, not swearing.
+- **Profanity: follow the Language line below** (clean brand pages; a little earned salt OK
+  in the blog). The realness comes from specificity and candor, not swearing.
 - **No heavy/dark or personal subject matter.** His hardship is his to tell, if ever; the
   site is about the work.
 - **No rambling runway.** His fiction can wander beautifully; web copy can't. Keep the voice,
@@ -45,6 +46,17 @@ Travis's fiction is raw, profane, and goes to dark places. The public brand keep
   no press-release cadence. It's the opposite of him, and this audience punishes it.
 - **No hype or overpromising.** (The `brand-truth-reviewer` gate enforces this regardless —
   shipped facts only.)
+
+## Language line (Travis's decision, 2026-06-29)
+- **Brand pages — Home, Products, About, Contact: ZERO profanity.** These are the public
+  product face for a family-grade, often older, licensed ham audience. Keep the edge through
+  candor, specificity, and dry humor — never through swearing.
+- **Blog: a little earned salt is OK.** The blog is Travis's personal space. The occasional
+  mild word ("hell," "damn," "ass," "crap," "pissed") is fine *when it's earned and
+  in-character* — seasoning, not the meal. Hard limits even on the blog: **no f-bombs, no
+  slurs, ever; never gratuitous; never in a post title, heading, or opening line** (those
+  surface in nav, search, RSS, and social cards). When in doubt, leave it out.
+- The `brand-truth-reviewer` gate enforces this line on every piece, by surface.
 
 ## Optional motifs (borrowed from his fiction, used lightly)
 - **An epigraph opening line** for a blog post — one short, resonant sentence before the

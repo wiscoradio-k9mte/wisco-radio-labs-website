@@ -109,6 +109,12 @@ of it; active EXTERNAL publishing of a product still waits for explicit launch g
   removed the **"transceivers" overclaim** (manager-introduced, gate caught it) → operator-
   differentiator + "more projects in progress"; **added IOTA** to CW Trainer QSO modes (product
   page + seed post) as "SOTA and IOTA contacts"; About/empty-state voice polish. Live + verified.
+- **Brand voice guide** (`docs/voice-style-guide.md`) — THE standing reference for all copy/blog.
+  Derived from Travis's own fiction (kept private, NOT in repo): plain first-person, specific to
+  proper nouns, dry understated humor, Driftless reverence, "build it well / make it repairable /
+  show the work." **Language line (Travis 2026-06-29):** brand pages (Home/Products/About/Contact)
+  = ZERO profanity; **blog** = a little earned mild salt OK (hell/damn/ass/crap level), never
+  f-bombs/slurs, never gratuitous, never in titles/headings/opening lines. Gate enforces by surface.
 
 ## What v1 must prove
 A fast, modern, **genuinely pleasant-to-read-on-a-phone** site with the five sections in
