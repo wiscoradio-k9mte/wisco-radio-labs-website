@@ -3,7 +3,7 @@
 
 export const SITE_TITLE = 'Wisco Radio Labs';
 export const SITE_DESCRIPTION =
-  'Ham-radio maker brand from the Driftless. Building CW trainers, transceivers, and more — in the open.';
+  'Ham-radio maker brand from the Driftless — open-source tools built by an operator who actually uses them, with more projects in progress.';
 
 // Nav items — single source of truth; rendered by both desktop nav and mobile drawer.
 export const NAV_ITEMS = [
