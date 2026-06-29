@@ -55,8 +55,10 @@ is 🟢 LIVE on the Snap Store at v2.3.0. Source of truth for facts: `../CW-Trai
 
 ## About page
 Intro to Travis + background + why he started Wisco Radio Labs. **Travis will supply a
-photo** (pending). Brand: military-maintenance discipline + maker's instinct; "Made in
-the Driftless."
+photo** (pending). **Background arc (confirmed 2026-06-29):** military maintenance/systems work
+→ **software engineer** → **information security engineer** — and that software/infosec career is
+what pulled him into ham radio (a love of building hardware + the software that runs it). This
+arc is now in the About bio. Brand: that discipline + maker's instinct; "Made in the Driftless."
 
 ## Assets
 - Logo: dark circular badge — "WISCO RADIO LABS" in orange, radio tower, "MADE IN THE
