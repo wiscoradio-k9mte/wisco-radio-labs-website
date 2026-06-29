@@ -70,16 +70,23 @@ gloss pass worked (reachable newcomers rose: Tariq 3→4, Hassan 2→3; expert h
   reframes "why this exists" around the integrated-QSO gap (existing trainers drill the pieces;
   none rehearse the full QSO) — competitors researched (Morse Elmer / MorseMania) but **NOT named**
   per Travis. Brand-truth PASS.
-- **Contact spam protection DONE (2026-06-29):** hCaptcha enabled in the Web3Forms dashboard
-  (advanced filter + strict) AND the **widget wired into `ContactForm.astro`** (zero-config
-  `data-captcha` div + Web3Forms `client/script.js` via `is:inline`; token rides along in the
-  FormData submit; submit requires the token). **Remaining = the live end-to-end test** (Travis
-  completes the captcha + we confirm an email lands in Gmail) — do at go-live.
-- **Go-live sequence (domain day):** register domain → set `site` + drop `base` in astro.config
-  + add `public/CNAME` + enforce HTTPS → flip `PREVIEW_NOINDEX=false` → end-to-end form test →
-  wire analytics + privacy note → add **meta-CSP (MUST allow `web3forms.com` + `hcaptcha.com`/
-  `*.hcaptcha.com` for the form widget: script-src/frame-src/connect-src)**, Dependabot,
-  SHA-pin the deploy action.
+- **Contact form DONE + VERIFIED (2026-06-29):** hCaptcha enabled in the Web3Forms dashboard
+  (advanced filter + strict) + widget wired into `ContactForm.astro` (theme-matched to the site;
+  token rides along in the FormData submit). **End-to-end test PASSED** — real submission lands in
+  `wiscoradio@gmail.com` (after a one-time Gmail "never spam" filter; from_name = "Wisco Radio
+  Labs — Contact"). Fully working.
+- **Go-live hardening DONE (2026-06-29):** meta-CSP in `BaseHead.astro` (allows self + web3forms +
+  hcaptcha `*.hcaptcha.com` + youtube-nocookie + self-hosted fonts; `'unsafe-inline'` for
+  script/style is deliberate — third parties inject inline, static site has no XSS sink;
+  `frame-ancestors` not enforceable via meta — a CDN/proxy would be needed for that) + referrer
+  policy; **Dependabot** (`npm` + `github-actions`, weekly); deploy actions **SHA-pinned**;
+  **/privacy page** (footer link, brand-truth PASS — honestly discloses Web3Forms + hCaptcha +
+  the YouTube thumbnail-on-render). **⚠ Needs Travis's real-browser check: confirm hCaptcha still
+  renders + submits under the CSP** (headless can't prove it; a wrong CSP domain breaks it silently).
+- **TRUE remaining = domain day only:** register domain → set `site` + drop `base` in astro.config
+  + add `public/CNAME` + **enable Enforce HTTPS in Pages** → flip `PREVIEW_NOINDEX=false` →
+  (optional) wire cookieless analytics (Cloudflare Web Analytics rec; update the privacy page when
+  added). That's the whole launch list now.
 - **Minor deferred:** remark-plugin/content-schema unit tests; blog code-block copy button;
   screenshot lightbox; optional "activations/contacts" parallelism across surfaces.
 - Travis's real-phone read-quality check (his standing bar).

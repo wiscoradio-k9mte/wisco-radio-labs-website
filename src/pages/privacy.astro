@@ -1,7 +1,8 @@
 ---
 // Privacy — plain-language note on data handling.
-// Covers only what's actually true today: Web3Forms contact form, hCaptcha,
-// click-to-load YouTube embeds, localStorage theme preference, and no analytics.
+// Covers only what's actually true today: Web3Forms contact form, hCaptcha, click-to-load
+// YouTube embeds (player + cookies wait for click; the preview thumbnail loads from YouTube on
+// render), localStorage theme preference, and no analytics.
 // Keep this in sync with the real implementation — brand-truth gate governs copy here.
 import BaseLayout from '../layouts/BaseLayout.astro';
 import { CONTACT_EMAIL } from '../consts';
@@ -9,14 +10,15 @@ import { withBase } from '../lib/link';
 ---
 <BaseLayout
   title="Privacy"
-  description="How Wisco Radio Labs handles data — short version: no tracking, no analytics. The contact form goes through Web3Forms and hCaptcha; that's the whole list."
+  description="How Wisco Radio Labs handles data — no tracking, no analytics. The contact form goes through Web3Forms and hCaptcha; blog video thumbnails load from YouTube. Details inside."
 >
   <section class="section container privacy-section">
 
     <h1 class="page-title">Privacy &amp; Data Handling</h1>
     <p class="page-lead">
-      Short version: no tracking, no ad tech, no analytics.
-      The only data that moves is what you send through the contact form.
+      Short version: no tracking, no ad tech, no analytics. The main thing that moves is what
+      you send through the contact form — and the few third parties involved (the form processor,
+      its spam check, and YouTube for video thumbnails) are spelled out below.
     </p>
     <p class="last-updated">Last updated: 2026-06-29</p>
 
@@ -40,9 +42,10 @@ import { withBase } from '../lib/link';
 
       <h2>Video</h2>
       <p>
-        Blog videos are YouTube embeds in a click-to-load wrapper — nothing loads from
-        YouTube until you choose to play. When you do, YouTube's own cookies and policies
-        apply to that session.
+        Blog videos use a click-to-load wrapper: the YouTube player doesn't load, and YouTube
+        sets no cookies, until you click play. Before that, the one thing fetched from YouTube is
+        the preview thumbnail image (from its image servers), so YouTube does see your IP for that
+        image. Press play and the full player loads, with YouTube's own cookies and policies.
       </p>
 
       <h2>Tracking</h2>
