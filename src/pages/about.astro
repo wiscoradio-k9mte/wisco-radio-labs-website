@@ -34,7 +34,7 @@ import { withBase } from '../lib/link';
 
       <!-- Text -->
       <div class="about-body">
-        <p class="eyebrow">Made in the Driftless</p>
+        <p class="eyebrow">Made in the Driftless (southwest Wisconsin)</p>
         <h1 class="about-title">About Wisco Radio Labs</h1>
         <p class="about-lead">
           Ham radio, built in the open — one project at a time, out of southwest Wisconsin.
@@ -43,7 +43,7 @@ import { withBase } from '../lib/link';
         <div class="about-prose">
           <p>
             I'm Travis Engh, K9MTE. I run Wisco Radio Labs — a one-person maker brand building
-            tools and equipment for the amateur-radio community. My background runs from military
+            tools for the amateur-radio community. My background runs from military
             maintenance and systems work into software engineering, and then information security —
             years of hands-on discipline that taught me to build things that are repairable,
             legible, and honest about what they do and don't do.
@@ -155,8 +155,10 @@ import { withBase } from '../lib/link';
     margin: 0 0 var(--space-6);
   }
 
+  /* Primary body text: --text (not --text-secondary) so it matches the blog's emphasis.
+     The lead above it stays at --text-secondary — intentionally lighter as an intro. */
   .about-prose p {
-    color: var(--text-secondary);
+    color: var(--text);
     line-height: 1.7;
     margin: 0 0 var(--space-5);
     font-size: var(--fs-body);

@@ -120,6 +120,8 @@ a:focus-visible {
 }
 
 /* ─── Eyebrow (brand device from the logo — use sparingly) ── */
+/* --brand (#E8821E) fails AA on light paper (#F7F4EF); --brand-ink is 5.30:1 in light,
+   equal to --brand (6.88:1) in dark — both themes pass, dark is unchanged. */
 .eyebrow {
   display: block;
   font-family: var(--font-display);
@@ -127,7 +129,7 @@ a:focus-visible {
   font-weight: 600;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--brand);
+  color: var(--brand-ink);
   margin-bottom: var(--space-3);
 }
 

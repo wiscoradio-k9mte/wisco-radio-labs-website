@@ -34,10 +34,11 @@ import screenshotCopy from '../../assets/cw-trainer/WiscoRadioLabs-Copy.png';
     <div class="product-header">
       <p class="eyebrow">Wisco Radio Labs &middot; Product</p>
       <h1 class="product-title">CW Trainer</h1>
-      <p class="product-lead">Learn Morse code the way hams actually use it.</p>
+      <!-- CW is Morse code — newcomers will get it from the lead; hams already know. -->
+      <p class="product-lead">CW is Morse code. Learn it the way hams actually use it.</p>
       <p class="product-status">
         <span class="status-dot" aria-hidden="true">&#x1F7E2;</span>
-        Live on the Snap Store &middot; v2.3.0 &middot; free &amp; open source (GPL-3.0)
+        Live on the Snap Store &middot; v2.3.0 &middot; free &amp; open source (GPL-3.0-or-later)
       </p>
     </div>
 
@@ -64,6 +65,18 @@ import screenshotCopy from '../../assets/cw-trainer/WiscoRadioLabs-Copy.png';
       >
         View on the Snap Store &rarr;
       </a>
+      <p class="install-note">
+        Linux only for now — Windows, macOS, and mobile are on the roadmap.
+      </p>
+      <a
+        href="https://github.com/wiscoradio-k9mte/CW-Trainer"
+        class="source-link"
+        rel="noopener noreferrer"
+        target="_blank"
+        aria-label="CW Trainer source code on GitHub (opens in new tab)"
+      >
+        Source code (GitHub) &rarr;
+      </a>
     </div>
 
     <!-- What it is -->
@@ -76,19 +89,21 @@ import screenshotCopy from '../../assets/cw-trainer/WiscoRadioLabs-Copy.png';
         get good at them, then add more one at a time until you have the full alphabet.
       </p>
       <p>
-        Once you know the characters, the trainer moves to what matters on the air — copying
-        random text at speed (the <strong>COPY drill</strong>), and sending your own with a key
-        or paddle while the app grades your fist (the <strong>KEY drill</strong>). The <strong>QSO
-        simulator</strong> walks you through realistic exchanges: POTA activations, SOTA and IOTA
-        contacts, and ragchew conversations.
+        Once you know the characters, the trainer moves to what matters on the air — sending
+        your own code with a key or paddle (the hardware you send Morse with) while the app
+        grades your <strong>fist</strong> (your sending rhythm) in the KEY drill, and copying
+        random text at speed in the COPY drill. The <strong>QSO</strong> (radio contact)
+        simulator walks you through realistic exchanges: POTA, SOTA, and IOTA (Parks, Summits,
+        and Islands on the Air) activations, and <strong>ragchew</strong> (a casual on-air
+        chat) conversations.
       </p>
       <p>
         It runs entirely offline — no network connection, no account, no tracking. It is free
-        and open source under the GPL-3.0 license.
+        and open source under the GPL-3.0-or-later license.
       </p>
     </section>
 
-    <!-- Screenshot gallery -->
+    <!-- Screenshot gallery — order matches the learning flow: LEARN, KEY, COPY, QSO -->
     <section class="product-section" aria-labelledby="screenshots-heading">
       <h2 id="screenshots-heading">A look inside</h2>
       <div class="screenshot-gallery">
@@ -106,18 +121,6 @@ import screenshotCopy from '../../assets/cw-trainer/WiscoRadioLabs-Copy.png';
         </figure>
         <figure class="screenshot-figure">
           <Image
-            src={screenshotCopy}
-            alt="CW Trainer COPY tab — copy random text at speed drill"
-            width={640}
-            height={480}
-            class="screenshot-img"
-            loading="lazy"
-            decoding="async"
-          />
-          <figcaption>COPY — copy random text at speed</figcaption>
-        </figure>
-        <figure class="screenshot-figure">
-          <Image
             src={screenshotKey}
             alt="CW Trainer KEY tab — send with a key or paddle, graded fist feedback"
             width={640}
@@ -127,6 +130,18 @@ import screenshotCopy from '../../assets/cw-trainer/WiscoRadioLabs-Copy.png';
             decoding="async"
           />
           <figcaption>KEY — sending practice with fist feedback</figcaption>
+        </figure>
+        <figure class="screenshot-figure">
+          <Image
+            src={screenshotCopy}
+            alt="CW Trainer COPY tab — copy random text at speed drill"
+            width={640}
+            height={480}
+            class="screenshot-img"
+            loading="lazy"
+            decoding="async"
+          />
+          <figcaption>COPY — copy random text at speed</figcaption>
         </figure>
         <figure class="screenshot-figure">
           <Image
@@ -143,12 +158,13 @@ import screenshotCopy from '../../assets/cw-trainer/WiscoRadioLabs-Copy.png';
       </div>
     </section>
 
-    <!-- How to use it -->
+    <!-- How to use it — steps follow the intended learning order: LEARN → KEY → COPY → QSO -->
     <section class="product-section" aria-labelledby="how-to-use">
       <h2 id="how-to-use">How to use it now</h2>
       <ol class="use-steps">
         <li>
-          <strong>Install it.</strong> On Linux with Snap: <code>snap install wr-cw-trainer</code>.
+          <strong>Install it.</strong> On Linux with Snap (the Linux app store):
+          <code>snap install wr-cw-trainer</code>.
           Launch it from your application menu or run <code>wr-cw-trainer</code> in a terminal.
         </li>
         <li>
@@ -157,17 +173,19 @@ import screenshotCopy from '../../assets/cw-trainer/WiscoRadioLabs-Copy.png';
           add the next character.
         </li>
         <li>
-          <strong>Build copy speed.</strong> Once you have a solid character set, switch to the
-          COPY drill. Random text at your target speed. Write down what you hear. Grade it.
+          <strong>Practice sending.</strong> Switch to the KEY drill. Use the on-screen paddle,
+          your keyboard, or a VBand-style USB adapter (it shows up as a keyboard, sending
+          <code>[</code> and <code>]</code> — a swap toggle flips reversed levers). The KEY drill
+          reads your timing and spacing to grade your fist.
         </li>
         <li>
-          <strong>Practice sending.</strong> Connect a straight key or paddle to your computer's
-          audio input (or use the on-screen paddle). The KEY drill listens to your sending and
-          grades your timing — a real fist check, not just "did you press the right key."
+          <strong>Build copy speed.</strong> Switch to the COPY drill. Random text plays at your
+          target speed. Write down what you hear. Grade it. Repeat until the characters arrive
+          without effort.
         </li>
         <li>
           <strong>Try a QSO.</strong> The QSO simulator walks you through a realistic contact —
-          a POTA activation, a SOTA check-in, or a ragchew. Copy their side, transmit yours.
+          a POTA activation, a SOTA chase, or a ragchew. Copy their side, send yours.
           It is a simulation; every real QSO will be different. The goal is confidence.
         </li>
       </ol>
@@ -323,6 +341,24 @@ import screenshotCopy from '../../assets/cw-trainer/WiscoRadioLabs-Copy.png';
 
   .snap-link { align-self: flex-start; }
 
+  .install-note {
+    font-size: var(--fs-small);
+    color: var(--text-secondary);
+    margin: 0;
+  }
+
+  .source-link {
+    font-size: var(--fs-small);
+    font-family: var(--font-display);
+    font-weight: 500;
+    color: var(--brand-ink);
+    text-decoration: none;
+    align-self: flex-start;
+  }
+
+  .source-link:hover { text-decoration: underline; }
+  .source-link:focus-visible { outline: 3px solid var(--focus-ring); outline-offset: 2px; border-radius: var(--radius-sm); }
+
   /* Sections */
   .product-section {
     margin-bottom: var(--space-10);
@@ -333,15 +369,17 @@ import screenshotCopy from '../../assets/cw-trainer/WiscoRadioLabs-Copy.png';
     margin-bottom: var(--space-5);
   }
 
+  /* Primary body text uses --text (not --text-secondary) so readability matches the blog.
+     Leads and status lines stay at --text-secondary — they're intentionally lighter. */
   .product-section p {
-    color: var(--text-secondary);
+    color: var(--text);
     line-height: 1.7;
     margin-bottom: var(--space-4);
   }
 
   .product-section ul,
   .product-section ol {
-    color: var(--text-secondary);
+    color: var(--text);
     line-height: 1.7;
     padding-left: var(--space-6);
     margin-bottom: var(--space-5);

@@ -6,8 +6,6 @@ import { Image } from 'astro:assets';
 import BaseLayout from './BaseLayout.astro';
 import FormattedDate from '../components/FormattedDate.astro';
 import YouTubeEmbed from '../components/YouTubeEmbed.astro';
-import { withBase } from '../lib/link';
-
 interface Props {
   title: string;
   description: string;
@@ -95,13 +93,13 @@ const postSchema = JSON.stringify({
         <slot />
       </div>
 
-      <!-- Tags at the bottom -->
+      <!-- Tags at the bottom — plain labels, not links (tag filter not yet built). -->
       {tags.length > 0 && (
         <div class="article-tags">
           <hr />
           <div class="article-tags-list">
             {tags.map(tag => (
-              <a href={withBase(`/blog/?tag=${encodeURIComponent(tag)}`)} class="tag">{tag}</a>
+              <span class="tag tag--plain">{tag}</span>
             ))}
           </div>
         </div>
@@ -174,5 +172,12 @@ const postSchema = JSON.stringify({
     display: flex;
     flex-wrap: wrap;
     gap: var(--space-2);
+  }
+
+  /* Plain variant: same visual as .tag but no hover/transition — not a control */
+  .tag--plain:hover {
+    background-color: var(--surface-2);
+    color: var(--text-secondary);
+    cursor: default;
   }
 </style>
