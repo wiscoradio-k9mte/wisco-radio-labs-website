@@ -70,10 +70,16 @@ gloss pass worked (reachable newcomers rose: Tariq 3→4, Hassan 2→3; expert h
   reframes "why this exists" around the integrated-QSO gap (existing trainers drill the pieces;
   none rehearse the full QSO) — competitors researched (Morse Elmer / MorseMania) but **NOT named**
   per Travis. Brand-truth PASS.
+- **Contact spam protection DONE (2026-06-29):** hCaptcha enabled in the Web3Forms dashboard
+  (advanced filter + strict) AND the **widget wired into `ContactForm.astro`** (zero-config
+  `data-captcha` div + Web3Forms `client/script.js` via `is:inline`; token rides along in the
+  FormData submit; submit requires the token). **Remaining = the live end-to-end test** (Travis
+  completes the captcha + we confirm an email lands in Gmail) — do at go-live.
 - **Go-live sequence (domain day):** register domain → set `site` + drop `base` in astro.config
-  + add `public/CNAME` + enforce HTTPS → flip `PREVIEW_NOINDEX=false` → enable Web3Forms
-  captcha/spam + **end-to-end form test** (submit → confirm it lands in Gmail) → wire analytics +
-  privacy note → add meta-CSP, Dependabot, SHA-pin the deploy action.
+  + add `public/CNAME` + enforce HTTPS → flip `PREVIEW_NOINDEX=false` → end-to-end form test →
+  wire analytics + privacy note → add **meta-CSP (MUST allow `web3forms.com` + `hcaptcha.com`/
+  `*.hcaptcha.com` for the form widget: script-src/frame-src/connect-src)**, Dependabot,
+  SHA-pin the deploy action.
 - **Minor deferred:** remark-plugin/content-schema unit tests; blog code-block copy button;
   screenshot lightbox; optional "activations/contacts" parallelism across surfaces.
 - Travis's real-phone read-quality check (his standing bar).
