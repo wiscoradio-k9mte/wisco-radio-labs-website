@@ -1,8 +1,8 @@
-name: Deploy to GitHub Pages
+name: Test & Build
 
 on:
   push:
-    # PREVIEW: triggers on feature/initial-build now so Travis can verify the deployed site.
+    # PREVIEW: triggers on feature/initial-build so Travis can verify the deployed site.
     # After Travis approves and the branch merges, change this to:
     #   branches: [main]
     branches: [feature/initial-build]
@@ -20,18 +20,31 @@ concurrency:
 
 jobs:
   build:
-    name: Build
+    name: Build & Gate
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # withastro/action installs deps, runs astro check + astro build, uploads Pages artifact.
-      # v3 is the current release as of Astro 6 (verified against docs.astro.build/en/guides/deploy/github/).
+      # withastro/action installs deps, runs astro check + astro build, and uploads
+      # the Pages artifact. v3 is the current release for Astro 6.
+      # (verified: docs.astro.build/en/guides/deploy/github/)
       - name: Build with Astro
         uses: withastro/action@v3
         with:
           node-version: 22
+
+      # Unit tests — run AFTER build so import.meta.env.PROD is irrelevant to dist/,
+      # but these are pure-logic tests that don't need dist/. Both gates must pass
+      # before the deploy job is allowed to run (it depends on this job via `needs: build`).
+      - name: Unit tests (vitest)
+        run: npm test
+
+      # Link-integrity + draft-exclusion gate — requires dist/ to exist (built above).
+      # Scans every HTML file for root-absolute hrefs missing the base prefix, and
+      # asserts no draft: true post was emitted into dist/blog/.
+      - name: Link-integrity & draft-exclusion gate
+        run: npm run test:links
 
   deploy:
     name: Deploy

@@ -11,4 +11,5 @@ This post exists to verify that `draft: true` posts are excluded from production
 It should appear in `astro dev` (development) but **not** in `astro build` output, the blog index,
 the article route, or the RSS feed when `PROD=true`.
 
-The link-integrity test (`npm run test`) asserts this behavior.
+The post-build gate (`npm run test:links`) asserts this behavior — it fails the build if a
+`draft: true` post is emitted into `dist/`.

@@ -10,9 +10,13 @@
 // In build:   import.meta.env.BASE_URL = '/wisco-radio-labs-website/'
 // In dev:     import.meta.env.BASE_URL = '/wisco-radio-labs-website/' (with base set)
 // At domain:  remove `base` from astro.config.mjs → BASE_URL becomes '/' → links still correct
+//
+// The optional `base` parameter exists for unit tests: tests pass the configured base
+// explicitly so the join logic is testable without env-injection tricks. Every call site
+// in .astro files omits it and gets import.meta.env.BASE_URL as intended.
 
-export const withBase = (path: string): string => {
-  const base = import.meta.env.BASE_URL.replace(/\/$/, ''); // strip trailing slash
-  const clean = path.replace(/^\//, ''); // strip leading slash
-  return clean ? `${base}/${clean}` : `${base}/`;
+export const withBase = (path: string, base = import.meta.env.BASE_URL): string => {
+  const b = base.replace(/\/$/, ''); // strip trailing slash from base
+  const clean = path.replace(/^\//, ''); // strip leading slash from path
+  return clean ? `${b}/${clean}` : `${b}/`;
 };

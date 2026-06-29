@@ -18,6 +18,7 @@ import { fileURLToPath } from 'node:url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const DIST = join(__dirname, '..', 'dist');
+const BLOG_CONTENT = join(__dirname, '..', 'src', 'content', 'blog');
 const BASE = '/wisco-radio-labs-website'; // must match astro.config.mjs base
 
 // Patterns that indicate a root-absolute internal link that LACKS the base prefix.
@@ -74,6 +75,41 @@ async function checkFile(filePath) {
   filesChecked++;
 }
 
+// ─── Draft-exclusion gate ────────────────────────────────────────────────────
+// Production builds must NOT emit any post whose frontmatter has `draft: true`.
+// The filter lives in three query sites (blog index, [...slug], rss). This is the
+// build-output assertion that makes that filter BITE: it reads every blog source
+// file, finds the drafts, and asserts none produced a page directory in dist/blog/.
+// Toggle a fixture's `draft:` flag and this turns red — that is the proof it works.
+async function checkDraftExclusion() {
+  let blogFiles;
+  try {
+    blogFiles = await readdir(BLOG_CONTENT);
+  } catch {
+    return; // no blog content dir — nothing to assert
+  }
+
+  for (const file of blogFiles) {
+    if (!/\.(md|mdx)$/.test(file)) continue;
+    const raw = await readFile(join(BLOG_CONTENT, file), 'utf8');
+    // Frontmatter is the first --- ... --- block; look for an explicit draft: true.
+    const fm = raw.match(/^---\r?\n([\s\S]*?)\r?\n---/);
+    const isDraft = fm ? /^\s*draft:\s*true\s*$/m.test(fm[1]) : false;
+    if (!isDraft) continue;
+
+    const slug = file.replace(/\.(md|mdx)$/, '');
+    try {
+      await stat(join(DIST, 'blog', slug));
+      // The directory exists → the draft was rendered into the production build.
+      console.error(`ERROR: draft post leaked into production build: dist/blog/${slug}/`);
+      console.error(`       Source ${file} has draft: true but was emitted.`);
+      errors++;
+    } catch {
+      // Good — no page directory for this draft.
+    }
+  }
+}
+
 // Check that dist/ exists
 try {
   await stat(DIST);
@@ -93,11 +129,13 @@ for (const f of htmlFiles) {
   await checkFile(f);
 }
 
+await checkDraftExclusion();
+
 if (errors > 0) {
-  console.error(`\nLink integrity FAILED: ${errors} base-path leak(s) in ${filesChecked} HTML file(s).`);
-  console.error('Every internal href/src must go through withBase() or be an imported asset.');
+  console.error(`\nBuild-output check FAILED: ${errors} issue(s) found across ${filesChecked} HTML file(s).`);
+  console.error('Every internal href/src must go through withBase() or be an imported asset, and no draft may ship.');
   process.exit(1);
 } else {
-  console.log(`Link integrity OK: ${filesChecked} HTML file(s) checked, 0 base-path leaks.`);
+  console.log(`Build-output OK: ${filesChecked} HTML file(s) checked, 0 base-path leaks, 0 draft leaks.`);
   process.exit(0);
 }
