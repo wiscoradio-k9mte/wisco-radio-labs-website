@@ -61,8 +61,10 @@ gloss pass worked (reachable newcomers rose: Tariq 3→4, Hassan 2→3; expert h
   security → ham radio (the infosec/software work is what pulled him in).
 
 ## Open / pending
-- **Needs Travis:** About **photo** (placeholder slot in place — one-line swap when supplied);
-  real article content over time (one seed post shipped).
+- **About photo SHIPPED** (2026-06-29, PR #4): Travis's bench selfie masked to a **transparent
+  circular** crop (`src/assets/about-travis.png`, no background box — both-theme-safe), shown in a
+  circular About slot. (Re-mask script approach if ever replaced: detect circle, alpha-mask, crop.)
+- **Needs Travis:** real article content over time (one seed post shipped).
 - **DONE 2026-06-29 (PR #2):** the honest **CW-learner framing** — Travis is NOT on the air with
   CW yet; he built the trainer to learn it. Shipped to the About bio + a **blog voice pass** that
   reframes "why this exists" around the integrated-QSO gap (existing trainers drill the pieces;
