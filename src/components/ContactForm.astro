@@ -65,7 +65,8 @@ const isPlaceholder = WEB3FORMS_KEY === 'PLACEHOLDER_WEB3FORMS_KEY';
         autocomplete="name"
         placeholder="Your name"
       />
-      <p class="form-error" id="contact-name-error" role="alert" aria-live="polite" hidden>
+      <!-- role="alert" already implies assertive; aria-live would be redundant/contradictory. -->
+      <p class="form-error" id="contact-name-error" role="alert" hidden>
         Please enter your name.
       </p>
     </div>
@@ -84,7 +85,7 @@ const isPlaceholder = WEB3FORMS_KEY === 'PLACEHOLDER_WEB3FORMS_KEY';
         autocomplete="email"
         placeholder="your@email.com"
       />
-      <p class="form-error" id="contact-email-error" role="alert" aria-live="polite" hidden>
+      <p class="form-error" id="contact-email-error" role="alert" hidden>
         Enter a valid email address.
       </p>
     </div>
@@ -114,7 +115,7 @@ const isPlaceholder = WEB3FORMS_KEY === 'PLACEHOLDER_WEB3FORMS_KEY';
         rows="6"
         placeholder="Your message…"
       ></textarea>
-      <p class="form-error" id="contact-message-error" role="alert" aria-live="polite" hidden>
+      <p class="form-error" id="contact-message-error" role="alert" hidden>
         Please enter a message.
       </p>
     </div>
@@ -122,7 +123,7 @@ const isPlaceholder = WEB3FORMS_KEY === 'PLACEHOLDER_WEB3FORMS_KEY';
     <!-- Status messages shown after submission attempt.
          Border + icon carry the semantic; body text uses --text so it passes AA in light mode. -->
     <div class="form-status" id="form-success" role="status" hidden>
-      <p>Thanks — I'll get back to you. 73!</p>
+      <p>Thanks — I'll get back to you. 73! (that's ham for "best regards")</p>
     </div>
     <div class="form-status form-status--error" id="form-network-error" role="alert" hidden>
       <p>

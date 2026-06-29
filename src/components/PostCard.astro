@@ -59,6 +59,7 @@ const { title, description, pubDate, href, heroImage, tags = [] } = Astro.props;
     <div class="post-card-body">
       {tags.length > 0 && (
         <div class="post-card-tags" aria-hidden="true">
+          <span class="post-card-tags-label">Topics:</span>
           {tags.slice(0, 2).map(tag => (
             <span class="tag">{tag}</span>
           ))}
@@ -142,8 +143,15 @@ const { title, description, pubDate, href, heroImage, tags = [] } = Astro.props;
   .post-card-tags {
     display: flex;
     flex-wrap: wrap;
+    align-items: center;
     gap: var(--space-2);
     margin-bottom: var(--space-3);
+  }
+
+  .post-card-tags-label {
+    font-size: var(--fs-caption);
+    font-weight: 500;
+    color: var(--text-secondary);
   }
 
   .post-card-title {

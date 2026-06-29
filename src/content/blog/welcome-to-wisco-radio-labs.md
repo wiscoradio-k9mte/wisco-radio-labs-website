@@ -38,4 +38,4 @@ The Driftless Area of southwest Wisconsin is a specific place: old hills and riv
 
 More projects are in progress. I'll write about them here.
 
-73 (best regards) de K9MTE
+73 (best regards) de (from) K9MTE

@@ -209,22 +209,17 @@ a:focus-visible {
 }
 
 /* ─── Tags / chips ────────────────────────────────────────── */
+/* Plain text labels — no pill shape, no hover affordance. All current uses are
+   decorative (no filter action wired yet), so the pill + hover would mis-signal
+   "click me." When a filter island is added, introduce a .tag--interactive variant
+   with the pill and hover instead of promoting the base style. */
 .tag {
   display: inline-flex;
   align-items: center;
-  padding: var(--space-1) var(--space-3);
-  background-color: var(--surface-2);
-  color: var(--text-secondary);
+  color: var(--text-muted);
   font-size: var(--fs-caption);
   font-family: var(--font-body);
-  border-radius: var(--radius-pill);
   text-decoration: none;
-  transition: background-color 150ms ease, color 150ms ease;
-}
-
-.tag:hover {
-  background-color: var(--brand-tint);
-  color: var(--brand-ink);
 }
 
 /* ─── Prose (article body) ────────────────────────────────── */

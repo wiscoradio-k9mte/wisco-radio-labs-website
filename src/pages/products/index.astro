@@ -38,7 +38,7 @@ import screenshotCopy from '../../assets/cw-trainer/WiscoRadioLabs-Copy.png';
       <p class="product-lead">CW is Morse code. Learn it the way hams actually use it.</p>
       <p class="product-status">
         <span class="status-dot" aria-hidden="true">&#x1F7E2;</span>
-        Live on the Snap Store &middot; v2.3.0 &middot; free &amp; open source (GPL-3.0-or-later)
+        Live on the Snap Store &middot; v2.3.0 &middot; free &amp; open source
       </p>
     </div>
 
@@ -71,14 +71,22 @@ import screenshotCopy from '../../assets/cw-trainer/WiscoRadioLabs-Copy.png';
       <p class="install-note">
         Linux only for now — Windows, macOS, and mobile are on the roadmap.
       </p>
+      <p class="install-note">
+        Don't have Snap yet?{' '}
+        <a href="https://snapcraft.io/docs/installing-snap-on-linux"
+           rel="noopener noreferrer" target="_blank"
+           aria-label="How to install Snap on Linux (opens in new tab)">
+          See the Snap install guide &rarr;
+        </a>
+      </p>
       <a
         href="https://github.com/wiscoradio-k9mte/CW-Trainer"
         class="source-link"
         rel="noopener noreferrer"
         target="_blank"
-        aria-label="CW Trainer source code on GitHub (opens in new tab)"
+        aria-label="CW Trainer source code on GitHub, GPL-3.0-or-later (opens in new tab)"
       >
-        Source code (GitHub) &rarr;
+        Source code on GitHub (GPL-3.0-or-later) &rarr;
       </a>
     </div>
 
@@ -97,8 +105,8 @@ import screenshotCopy from '../../assets/cw-trainer/WiscoRadioLabs-Copy.png';
         grades your <strong>fist</strong> (your sending rhythm) in the KEY drill, and copying
         random text at speed in the COPY drill. The <strong>QSO</strong> (radio contact)
         simulator walks you through realistic exchanges: POTA, SOTA, and IOTA (Parks, Summits,
-        and Islands on the Air) activations, and <strong>ragchew</strong> (a casual on-air
-        chat) conversations.
+        and Islands on the Air) — activations and contacts — and <strong>ragchew</strong>
+        (a casual on-air chat) conversations.
       </p>
       <p>
         It runs entirely offline — no network connection, no account, no tracking. It is free
@@ -177,8 +185,8 @@ import screenshotCopy from '../../assets/cw-trainer/WiscoRadioLabs-Copy.png';
         </li>
         <li>
           <strong>Practice sending.</strong> Switch to the KEY drill. Use the on-screen paddle,
-          your keyboard, or a VBand-style USB adapter (it shows up as a keyboard, sending
-          <code>[</code> and <code>]</code> — a swap toggle flips reversed levers). The KEY drill
+          your keyboard, or a USB Morse key adapter (such as VBand) — it shows up as a keyboard,
+          sending <code>[</code> and <code>]</code>; a swap toggle flips reversed levers. The KEY drill
           reads your timing and spacing to grade your fist.
         </li>
         <li>
@@ -188,8 +196,8 @@ import screenshotCopy from '../../assets/cw-trainer/WiscoRadioLabs-Copy.png';
         </li>
         <li>
           <strong>Try a QSO.</strong> The QSO simulator walks you through a realistic contact —
-          a POTA activation, a SOTA chase, or a ragchew. Copy their side, send yours.
-          It is a simulation; every real QSO will be different. The goal is confidence.
+          a POTA activation, a SOTA chase, an IOTA island contact, or a ragchew. Copy their side,
+          send yours. It is a simulation; every real QSO will be different. The goal is confidence.
         </li>
       </ol>
     </section>
@@ -207,9 +215,8 @@ import screenshotCopy from '../../assets/cw-trainer/WiscoRadioLabs-Copy.png';
         <li><strong>iOS and Android</strong> via Capacitor</li>
       </ul>
       <p>
-        The code is pure React and Web Audio with a store facade written for exactly this kind
-        of cross-platform extension. None of the above are available yet — they are where this
-        is going.
+        The app is built so it can extend to those platforms without starting over.
+        None of the above are available yet — they are where this is going.
       </p>
     </section>
 
@@ -237,7 +244,11 @@ import screenshotCopy from '../../assets/cw-trainer/WiscoRadioLabs-Copy.png';
           setTimeout(() => { copyStatus.textContent = ''; }, 2000);
         }
       } catch {
-        // Clipboard API not available; silently ignore (the text is visible and selectable)
+        // Clipboard API unavailable — announce the fallback so AT users know to select manually.
+        if (copyStatus) {
+          copyStatus.textContent = "Couldn't copy — select the command and copy it manually.";
+          setTimeout(() => { copyStatus.textContent = ''; }, 4000);
+        }
       }
     });
   });
