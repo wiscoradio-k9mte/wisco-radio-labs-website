@@ -20,7 +20,7 @@ So I built it. Then I built it again better. Then I shipped it on Linux.
 
 ## The CW Trainer
 
-The [CW Trainer](/products/) is the first product out of Wisco Radio Labs. It's live on the Snap Store at v2.3.0 — Koch-method lessons, copy and sending practice (including graded fist feedback), and a QSO simulator for POTA, SOTA, and ragchew contacts.
+The [CW Trainer](/products/) is the first product out of Wisco Radio Labs. It's live on the Snap Store at v2.3.0 — Koch-method lessons, copy and sending practice (including graded fist feedback), and a QSO simulator for POTA, SOTA, IOTA, and ragchew contacts.
 
 It's fully offline. Free. Open source under GPL-3.0.
 

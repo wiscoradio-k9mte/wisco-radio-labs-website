@@ -1,8 +1,10 @@
 # Copy Voice Pass — Wisco Radio Labs Website
 
-**Status:** Proposal only. Nothing changes on the live site until the brand-truth gate
-clears this and Travis approves. All proposed copy is checked against shipped facts as of
-v2.3.0 (CW Trainer brief + portfolio, 2026-06-28).
+**Status:** APPLIED 2026-06-29. Brand-truth gate PASSED; Travis approved. Decisions: (1)
+"transceivers" removed — replaced with the differentiator + "more projects in progress"
+framing (Travis chose "hint at more coming, no specifics"); (2) IOTA added as "SOTA and IOTA
+contacts" across the product page + seed post (Travis: yes). The five voice changes below are
+live on `feature/initial-build`. All copy checked against shipped facts as of v2.3.0.
 
 **One flag that runs through multiple surfaces:** the current hero sub and `SITE_DESCRIPTION`
 in `consts.ts` both say "building CW trainers, transceivers, and tools." The portfolio shows
