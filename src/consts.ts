@@ -14,10 +14,10 @@ export const NAV_ITEMS = [
   { label: 'Contact', href: '/contact/' },
 ] as const;
 
-// Web3Forms submission key.
-// Replace PLACEHOLDER_WEB3FORMS_KEY with the real access_key from web3forms.com once created.
-// While this is the placeholder, the contact page shows a mailto fallback instead of the form.
-export const WEB3FORMS_KEY = 'PLACEHOLDER_WEB3FORMS_KEY';
+// Web3Forms submission key (form "Contact Form"). Submissions are emailed to CONTACT_EMAIL.
+// If this is ever reset to the placeholder, the contact page falls back to a mailto block.
+// Typed as string (not the literal) so the contact page's placeholder-fallback check stays valid.
+export const WEB3FORMS_KEY: string = '9b7ac533-b994-4be7-9034-b479d4c4c324';
 
 // Contact email — used in the mailto fallback and form error messages.
 export const CONTACT_EMAIL = 'wiscoradio@gmail.com';
