@@ -119,55 +119,116 @@ import screenshotCopy from '../../assets/cw-trainer/WiscoRadioLabs-Copy.png';
       <h2 id="screenshots-heading">A look inside</h2>
       <div class="screenshot-gallery">
         <figure class="screenshot-figure">
-          <Image
-            src={screenshotLearn}
-            alt="CW Trainer LEARN tab — Koch method character chart and current lesson"
-            width={640}
-            height={480}
-            class="screenshot-img"
-            loading="lazy"
-            decoding="async"
-          />
+          <!-- Button wraps the image so keyboard users can open the lightbox.
+               aria-label names the action; the img keeps its own alt for context.
+               data-lightbox-alt is read by the lightbox to label its enlarged copy. -->
+          <button
+            class="screenshot-btn"
+            type="button"
+            aria-label="Enlarge: LEARN tab screenshot"
+            data-lightbox-alt="CW Trainer LEARN tab — Koch method character chart and current lesson"
+          >
+            <Image
+              src={screenshotLearn}
+              alt="CW Trainer LEARN tab — Koch method character chart and current lesson"
+              width={640}
+              height={480}
+              class="screenshot-img"
+              loading="lazy"
+              decoding="async"
+            />
+          </button>
           <figcaption>LEARN — Koch-method character lessons</figcaption>
         </figure>
         <figure class="screenshot-figure">
-          <Image
-            src={screenshotKey}
-            alt="CW Trainer KEY tab — send with a key or paddle, graded fist feedback"
-            width={640}
-            height={480}
-            class="screenshot-img"
-            loading="lazy"
-            decoding="async"
-          />
+          <button
+            class="screenshot-btn"
+            type="button"
+            aria-label="Enlarge: KEY tab screenshot"
+            data-lightbox-alt="CW Trainer KEY tab — send with a key or paddle, graded fist feedback"
+          >
+            <Image
+              src={screenshotKey}
+              alt="CW Trainer KEY tab — send with a key or paddle, graded fist feedback"
+              width={640}
+              height={480}
+              class="screenshot-img"
+              loading="lazy"
+              decoding="async"
+            />
+          </button>
           <figcaption>KEY — sending practice with fist feedback</figcaption>
         </figure>
         <figure class="screenshot-figure">
-          <Image
-            src={screenshotCopy}
-            alt="CW Trainer COPY tab — copy random text at speed drill"
-            width={640}
-            height={480}
-            class="screenshot-img"
-            loading="lazy"
-            decoding="async"
-          />
+          <button
+            class="screenshot-btn"
+            type="button"
+            aria-label="Enlarge: COPY tab screenshot"
+            data-lightbox-alt="CW Trainer COPY tab — copy random text at speed drill"
+          >
+            <Image
+              src={screenshotCopy}
+              alt="CW Trainer COPY tab — copy random text at speed drill"
+              width={640}
+              height={480}
+              class="screenshot-img"
+              loading="lazy"
+              decoding="async"
+            />
+          </button>
           <figcaption>COPY — copy random text at speed</figcaption>
         </figure>
         <figure class="screenshot-figure">
-          <Image
-            src={screenshotQSO}
-            alt="CW Trainer QSO tab — realistic QSO simulator for POTA, SOTA, IOTA, and ragchew"
-            width={640}
-            height={480}
-            class="screenshot-img"
-            loading="lazy"
-            decoding="async"
-          />
+          <button
+            class="screenshot-btn"
+            type="button"
+            aria-label="Enlarge: QSO tab screenshot"
+            data-lightbox-alt="CW Trainer QSO tab — realistic QSO simulator for POTA, SOTA, IOTA, and ragchew"
+          >
+            <Image
+              src={screenshotQSO}
+              alt="CW Trainer QSO tab — realistic QSO simulator for POTA, SOTA, IOTA, and ragchew"
+              width={640}
+              height={480}
+              class="screenshot-img"
+              loading="lazy"
+              decoding="async"
+            />
+          </button>
           <figcaption>QSO — realistic contact simulator</figcaption>
         </figure>
       </div>
     </section>
+
+    <!-- Lightbox overlay — opened by screenshot buttons above.
+         Modeled on MobileMenu.astro: dialog + focus trap + inert + Esc + backdrop click.
+         Hidden via visibility/opacity (not display:none) so close transition can play. -->
+    <div
+      id="lightbox"
+      class="lightbox"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="lightbox-caption"
+    >
+      <div id="lightbox-backdrop" class="lightbox-backdrop" aria-hidden="true"></div>
+      <div class="lightbox-panel">
+        <button
+          id="lightbox-close"
+          class="lightbox-close"
+          type="button"
+          aria-label="Close screenshot"
+        >
+          <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"/>
+            <line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+          <span>Close</span>
+        </button>
+        <img id="lightbox-img" src="" alt="" class="lightbox-img" />
+        <p id="lightbox-caption" class="lightbox-caption"></p>
+      </div>
+    </div>
 
     <!-- How to use it — steps follow the intended learning order: LEARN → KEY → COPY → QSO -->
     <section class="product-section" aria-labelledby="how-to-use">
@@ -252,6 +313,77 @@ import screenshotCopy from '../../assets/cw-trainer/WiscoRadioLabs-Copy.png';
       }
     });
   });
+</script>
+
+<script>
+  // ── Screenshot lightbox ─────────────────────────────────────────────────────
+  // Modeled on MobileMenu.astro: role=dialog, focus trap, inert, Esc, backdrop click.
+  // Opens the clicked screenshot at display size; focus returns to trigger on close.
+
+  const lightbox        = document.getElementById('lightbox');
+  const lightboxClose   = document.getElementById('lightbox-close') as HTMLButtonElement | null;
+  const lightboxImg     = document.getElementById('lightbox-img') as HTMLImageElement | null;
+  const lightboxCaption = document.getElementById('lightbox-caption');
+  const lightboxBackdrop = document.getElementById('lightbox-backdrop');
+  const mainEl          = document.getElementById('main');
+
+  if (!lightbox || !lightboxClose || !lightboxImg) {
+    console.warn('Lightbox: missing required elements');
+  } else {
+    const FOCUSABLE = 'button:not([disabled]), a[href], [tabindex]:not([tabindex="-1"])';
+    let activeTrigger: HTMLButtonElement | null = null;
+
+    const openLightbox = (btn: HTMLButtonElement) => {
+      const img = btn.querySelector<HTMLImageElement>('img');
+      if (!img) return;
+
+      activeTrigger = btn;
+      lightboxImg.src = img.currentSrc || img.src; // prefer currentSrc for responsive images
+      lightboxImg.alt = btn.dataset.lightboxAlt ?? img.alt;
+      if (lightboxCaption) lightboxCaption.textContent = btn.dataset.lightboxAlt ?? '';
+
+      lightbox.classList.add('lightbox--open');
+      document.body.style.overflow = 'hidden';
+      if (mainEl) mainEl.inert = true;
+      lightboxClose.focus();
+    };
+
+    const closeLightbox = () => {
+      lightbox.classList.remove('lightbox--open');
+      document.body.style.overflow = '';
+      if (mainEl) mainEl.inert = false;
+      activeTrigger?.focus();
+      activeTrigger = null;
+    };
+
+    // Wire screenshot buttons
+    document.querySelectorAll<HTMLButtonElement>('.screenshot-btn').forEach(btn => {
+      btn.addEventListener('click', () => openLightbox(btn));
+    });
+
+    lightboxClose.addEventListener('click', closeLightbox);
+    lightboxBackdrop?.addEventListener('click', closeLightbox);
+
+    // Esc closes
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && lightbox.classList.contains('lightbox--open')) closeLightbox();
+    });
+
+    // Focus trap — only the close button is focusable in this single-image lightbox,
+    // so Tab wraps back to it rather than escaping into the background.
+    lightbox.addEventListener('keydown', (e) => {
+      if (e.key !== 'Tab' || !lightbox.classList.contains('lightbox--open')) return;
+      const focusable = Array.from(lightbox.querySelectorAll<HTMLElement>(FOCUSABLE));
+      if (focusable.length === 0) return;
+      const first = focusable[0];
+      const last  = focusable[focusable.length - 1];
+      if (e.shiftKey) {
+        if (document.activeElement === first) { e.preventDefault(); last.focus(); }
+      } else {
+        if (document.activeElement === last) { e.preventDefault(); first.focus(); }
+      }
+    });
+  }
 </script>
 
 <style>
@@ -438,5 +570,140 @@ import screenshotCopy from '../../assets/cw-trainer/WiscoRadioLabs-Copy.png';
     font-size: var(--fs-caption);
     color: var(--text-muted);
     margin-top: var(--space-2);
+  }
+
+  /* Screenshot button — wraps each thumbnail to make it keyboard-operable.
+     Width 100% so it fills the figure cell; padding:0 so image touches edges. */
+  .screenshot-btn {
+    display: block;
+    width: 100%;
+    padding: 0;
+    background: transparent;
+    border: none;
+    border-radius: var(--radius-md);
+    cursor: zoom-in;
+  }
+
+  .screenshot-btn:focus-visible {
+    outline: 3px solid var(--focus-ring);
+    outline-offset: 2px;
+    border-radius: var(--radius-md);
+  }
+
+  /* Subtle hover ring so it's clear the image is interactive */
+  .screenshot-btn:hover .screenshot-img {
+    border-color: var(--border-strong);
+    opacity: 0.92;
+    transition: opacity 120ms ease, border-color 120ms ease;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .screenshot-btn:hover .screenshot-img { transition: none; }
+  }
+
+  /* ── Lightbox ─────────────────────────────────────────────────────────────── */
+
+  /* Hidden: invisible + pointer-events off so Tab can't reach it.
+     Visible transition on the backdrop; panel fades in via .lightbox--open.
+     visibility:hidden → visible is delayed on close so fade-out completes first. */
+  .lightbox {
+    position: fixed;
+    inset: 0;
+    z-index: 200;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    visibility: hidden;
+    /* Close: let the opacity fade finish before hiding from AT */
+    transition: visibility 0s linear 200ms;
+  }
+
+  .lightbox--open {
+    visibility: visible;
+    transition: visibility 0s linear;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .lightbox, .lightbox--open { transition: none; }
+  }
+
+  /* Scrim */
+  .lightbox-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.72);
+    opacity: 0;
+    transition: opacity 200ms ease;
+  }
+
+  .lightbox--open .lightbox-backdrop {
+    opacity: 1;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .lightbox-backdrop { transition: none; }
+  }
+
+  /* Centered panel — above the backdrop */
+  .lightbox-panel {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    max-width: min(90vw, 960px);
+    max-height: 90vh;
+    opacity: 0;
+    transform: scale(0.96);
+    transition: opacity 200ms ease, transform 200ms ease;
+  }
+
+  .lightbox--open .lightbox-panel {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .lightbox-panel, .lightbox--open .lightbox-panel { transform: none; transition: none; }
+  }
+
+  /* Close button sits above the image, aligned to its right edge */
+  .lightbox-close {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    min-height: 48px;
+    padding: var(--space-2) var(--space-3);
+    margin-bottom: var(--space-2);
+    background: var(--surface-1);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-sm);
+    color: var(--text-secondary);
+    font-family: var(--font-display);
+    font-size: var(--fs-small);
+    font-weight: 500;
+    cursor: pointer;
+    transition: color 150ms ease;
+  }
+
+  .lightbox-close:hover { color: var(--text); }
+  .lightbox-close:focus-visible { outline: 3px solid var(--focus-ring); outline-offset: 2px; }
+
+  /* The enlarged image */
+  .lightbox-img {
+    display: block;
+    max-width: 100%;
+    max-height: calc(90vh - 80px); /* leave room for close button */
+    height: auto;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border);
+  }
+
+  /* Caption (sr-only in the dialog heading role; visible as a small line below) */
+  .lightbox-caption {
+    font-size: var(--fs-caption);
+    color: var(--text-muted);
+    margin-top: var(--space-2);
+    align-self: flex-start;
   }
 </style>
