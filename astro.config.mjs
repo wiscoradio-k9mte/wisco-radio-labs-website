@@ -1,5 +1,6 @@
 import { defineConfig } from 'astro/config';
 import sitemap from '@astrojs/sitemap';
+import { unified } from '@astrojs/markdown-remark';
 import remarkRewriteLinks from './src/lib/remark-rewrite-links.mjs';
 
 const BASE = '/wisco-radio-labs-website';
@@ -17,7 +18,14 @@ export default defineConfig({
   markdown: {
     // Rewrite root-absolute links in Markdown content to include the base path.
     // Plain .md files can't call withBase() — this plugin handles it at build time.
-    remarkPlugins: [[remarkRewriteLinks, { base: BASE }]],
+    //
+    // Wired via markdown.processor (the Astro 6 API) instead of the deprecated
+    // markdown.remarkPlugins. The processor is the unified() instance that Astro's
+    // markdown pipeline already uses internally; we supply our plugin here and it
+    // merges cleanly with GFM/smartypants defaults.
+    //
+    // Domain go-live: set site to domain, remove base, remove remarkRewriteLinks.
+    processor: unified({ remarkPlugins: [[remarkRewriteLinks, { base: BASE }]] }),
   },
   // image: defaults (sharp) are fine
 });
