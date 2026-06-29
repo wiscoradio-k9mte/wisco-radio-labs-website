@@ -23,13 +23,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        # SHA-pinned (supply-chain hardening). SHA verified against the tag via the GitHub API.
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
 
       # withastro/action installs deps, runs astro check + astro build, and uploads
       # the Pages artifact. v3 is the current release for Astro 6.
       # (verified: docs.astro.build/en/guides/deploy/github/)
       - name: Build with Astro
-        uses: withastro/action@v3
+        uses: withastro/action@56781b97402ce0487b7e61ce2cb960c0e2cc5289 # v3.0.2
         with:
           node-version: 22
 
@@ -55,4 +56,4 @@ jobs:
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e # v4.0.5
