@@ -25,6 +25,8 @@ So I built it. Then I built it again, better. Then I shipped it on Linux.
 
 The [CW Trainer](/products/) is the first product out of Wisco Radio Labs. It's live on the Snap Store (the Linux app store) at v2.3.0 — Koch-method lessons, copy and sending practice (including graded fist feedback), and a QSO simulator for POTA, SOTA, and IOTA (Parks, Summits, and Islands on the Air) contacts, plus ragchews.
 
+![The CW Trainer's QSO simulator — a simulated on-air contact in progress.](../../assets/cw-trainer/WiscoRadioLabs-QSO.png)
+
 It's fully offline. Free. Open source under GPL-3.0-or-later.
 
 ```
@@ -37,7 +39,11 @@ It's live on Linux via the Snap Store, and nailing that desktop build is my focu
 
 This is the bench log. I'll write here about what I'm building, how it's going, and what I got wrong the first time — which, if the CW thing is any indication, will be a recurring feature.
 
+![A NorCal 40B kit from NM0S Electronics mid-build, held in a helping-hands clamp on the bench.](../../assets/blog/welcome-to-wisco-radio-labs/norcal-40b-kit-build.jpg)
+
 Showing the work like that is a Driftless habit. The Driftless Area of southwest Wisconsin is a specific place — old hills and river valleys, stubbornly themselves while the rest of the midwest was flattened and then sprawled. "Made in the Driftless" is half geography, half attitude: build it well, make it repairable, show the work. The bench log is that last part.
+
+![A spring creek winding through a wooded valley in the Driftless Area of southwest Wisconsin, in winter.](../../assets/blog/welcome-to-wisco-radio-labs/driftless-area-stream-winter.jpg)
 
 More projects are coming. I'll write about them here.
 
