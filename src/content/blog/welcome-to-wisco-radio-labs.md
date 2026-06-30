@@ -2,9 +2,9 @@
 title: "Welcome to Wisco Radio Labs"
 description: "Why I started building ham-radio tools in southwest Wisconsin, and what's coming."
 pubDate: 2026-06-28
-tags: ["meta", "CW", "builds"]
+tags: ["CW", "builds", "meta"]
 heroImage: ../../assets/blog/welcome-to-wisco-radio-labs/k9mte-ft-891-cw-station.jpg
-draft: false
+draft: true
 ---
 
 Ham radio, built in the open.
