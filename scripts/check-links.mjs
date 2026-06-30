@@ -19,18 +19,20 @@
 import { readdir, readFile, stat } from 'node:fs/promises';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import {
+  checkBasePathLeaks,
+  checkAriaRefs,
+  checkSingleH1,
+  checkHeadingSkip,
+  parseFrontmatterDraft,
+  checkDraftHtmlLeak,
+  checkDraftInRss,
+} from '../src/lib/check-links-rules.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const DIST = join(__dirname, '..', 'dist');
 const BLOG_CONTENT = join(__dirname, '..', 'src', 'content', 'blog');
 const BASE = '/wisco-radio-labs-website'; // must match astro.config.mjs base
-
-// Patterns that indicate a root-absolute internal link that LACKS the base prefix.
-// Allowlist: external URLs (http/https), data URIs, fragment-only (#), empty.
-const ROOT_ABS_RE = /(?:href|src)="(\/[^/](?:[^"]*))"/g;
-const EXTERNAL_RE = /^https?:\/\//;
-const DATA_RE = /^data:/;
-const BLOB_RE = /^blob:/;
 
 let errors = 0;
 let filesChecked = 0;
@@ -50,77 +52,20 @@ async function walkHtml(dir) {
 
 async function checkFile(filePath) {
   const content = await readFile(filePath, 'utf8');
-  const relative = filePath.replace(DIST, '');
-  let match;
+  // Relative path is the label used in every error message for this file.
+  // Strip the absolute dist prefix so the path reads as /blog/index.html etc.
+  const context = filePath.replace(DIST, '');
 
-  // ── Gate 1: base-path leaks ──────────────────────────────────────────────
-  ROOT_ABS_RE.lastIndex = 0;
-  while ((match = ROOT_ABS_RE.exec(content)) !== null) {
-    const value = match[1];
-
-    // Skip externals and data URIs
-    if (EXTERNAL_RE.test(value) || DATA_RE.test(value) || BLOB_RE.test(value)) continue;
-
-    // Skip fragment-only links
-    if (value.startsWith('#')) continue;
-
-    // Skip links that correctly include the base
-    if (value.startsWith(BASE + '/') || value === BASE) continue;
-
-    // Also skip the base itself as a path — e.g. /wisco-radio-labs-website
-    if (value === BASE + '/') continue;
-
-    // Anything else starting with / that is NOT under the base is a leak
-    console.error(`ERROR: root-absolute link without base in ${relative}`);
-    console.error(`       Found: ${match[0]}`);
-    console.error(`       Expected prefix: ${BASE}/`);
+  // Run each pure rule and print any violations it finds
+  const violations = [
+    ...checkBasePathLeaks(content, BASE, context),
+    ...checkAriaRefs(content, context),
+    ...checkSingleH1(content, context),
+    ...checkHeadingSkip(content, context),
+  ];
+  for (const v of violations) {
+    console.error(v.message);
     errors++;
-  }
-
-  // ── Gate 2: aria-labelledby / aria-describedby id resolution ─────────────
-  // Collect every id="..." value present in this page.
-  const idSet = new Set();
-  const idRe = /\bid="([^"]+)"/g;
-  while ((match = idRe.exec(content)) !== null) {
-    idSet.add(match[1]);
-  }
-
-  // For every aria-labelledby/describedby, each space-separated token must be a real id.
-  const ariaRe = /aria-(?:labelledby|describedby)="([^"]+)"/g;
-  while ((match = ariaRe.exec(content)) !== null) {
-    const attrName = match[0].match(/aria-[\w]+/)[0];
-    const refs = match[1].trim().split(/\s+/);
-    for (const ref of refs) {
-      if (!idSet.has(ref)) {
-        console.error(`ERROR: ${attrName}="${ref}" has no matching id in ${relative}`);
-        errors++;
-      }
-    }
-  }
-
-  // ── Gate 3: exactly one <h1> per page ────────────────────────────────────
-  const h1Matches = content.match(/<h1[\s>]/gi) || [];
-  if (h1Matches.length !== 1) {
-    console.error(`ERROR: expected exactly 1 <h1> in ${relative}, found ${h1Matches.length}`);
-    errors++;
-  }
-
-  // ── Gate 4: no heading-level skips ───────────────────────────────────────
-  // Collect heading levels in DOM order; flag any descent that jumps more than one level
-  // (h1→h3, h2→h4, etc.). Ascending (h3→h1) is always valid.
-  const headingRe = /<h([1-6])[\s>]/gi;
-  const headingLevels = [];
-  while ((match = headingRe.exec(content)) !== null) {
-    headingLevels.push(parseInt(match[1], 10));
-  }
-  for (let i = 1; i < headingLevels.length; i++) {
-    const prev = headingLevels[i - 1];
-    const curr = headingLevels[i];
-    if (curr > prev + 1) {
-      console.error(`ERROR: heading skip in ${relative}: h${prev} → h${curr} (missing h${prev + 1})`);
-      errors++;
-      break; // report first skip per page to avoid noise
-    }
   }
 
   filesChecked++;
@@ -142,22 +87,22 @@ async function checkDraftExclusion() {
   for (const file of blogFiles) {
     if (!/\.(md|mdx)$/.test(file)) continue;
     const raw = await readFile(join(BLOG_CONTENT, file), 'utf8');
-    // Frontmatter is the first --- ... --- block; look for an explicit draft: true.
-    const fm = raw.match(/^---\r?\n([\s\S]*?)\r?\n---/);
-    const isDraft = fm ? /^\s*draft:\s*true\s*$/m.test(fm[1]) : false;
-    if (!isDraft) continue;
+    if (!parseFrontmatterDraft(raw)) continue;
 
     const slug = file.replace(/\.(md|mdx)$/, '');
     draftSlugs.push(slug);
 
-    // Gate 5: HTML page must NOT exist.
+    // Gate 5: HTML page must NOT exist. stat() succeeds when the path exists.
+    let pageExists = false;
     try {
       await stat(join(DIST, 'blog', slug));
-      console.error(`ERROR: draft post leaked into production build: dist/blog/${slug}/`);
-      console.error(`       Source ${file} has draft: true but was emitted.`);
-      errors++;
+      pageExists = true;
     } catch {
       // Good — no page directory for this draft.
+    }
+    for (const v of checkDraftHtmlLeak(slug, file, pageExists)) {
+      console.error(v.message);
+      errors++;
     }
   }
 
@@ -169,11 +114,9 @@ async function checkDraftExclusion() {
   } catch {
     return; // no rss.xml — nothing to assert
   }
-  for (const slug of draftSlugs) {
-    if (rssContent.includes(`/blog/${slug}/`)) {
-      console.error(`ERROR: draft post "${slug}" appears in dist/rss.xml`);
-      errors++;
-    }
+  for (const v of checkDraftInRss(rssContent, draftSlugs)) {
+    console.error(v.message);
+    errors++;
   }
 }
 
