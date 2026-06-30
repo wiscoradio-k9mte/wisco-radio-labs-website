@@ -13,11 +13,12 @@ interface Props {
   pubDate: Date;
   updatedDate?: Date;
   heroImage?: ImageMetadata;
+  heroCaption?: string;
   tags?: string[];
   youtube?: string;
 }
 
-const { title, description, pubDate, updatedDate, heroImage, tags = [], youtube } = Astro.props;
+const { title, description, pubDate, updatedDate, heroImage, heroCaption, tags = [], youtube } = Astro.props;
 
 // JSON-LD: BlogPosting — per-article, injected into <head> via BaseLayout's head slot.
 // Astro.url.href is the canonical URL for this post (site + base + slug, already correct).
@@ -53,7 +54,7 @@ const postSchema = JSON.stringify({
   <article class="blog-article">
     <!-- Hero image (full width, above the title) -->
     {heroImage && (
-      <div class="article-hero-wrap container">
+      <figure class="article-hero-wrap container">
         <Image
           src={heroImage}
           alt=""
@@ -63,7 +64,8 @@ const postSchema = JSON.stringify({
           loading="eager"
           decoding="async"
         />
-      </div>
+        {heroCaption && <figcaption class="article-hero-caption">{heroCaption}</figcaption>}
+      </figure>
     )}
 
     <!-- Article header -->
@@ -183,6 +185,13 @@ const postSchema = JSON.stringify({
     height: auto;
     display: block;
     border-radius: var(--radius-md);
+  }
+
+  .article-hero-caption {
+    margin-top: var(--space-2);
+    text-align: center;
+    font-size: var(--fs-caption);
+    color: var(--text-muted);
   }
 
   /* Header */
