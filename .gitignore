@@ -19,3 +19,7 @@ Thumbs.db
 *.swp
 .idea/
 .vscode/
+
+# Internal team docs — kept locally as project memory, not for the public repo
+/CLAUDE.md
+/docs/
