@@ -9,15 +9,23 @@
 // Vendor is an open decision — not wired until Travis picks one at domain go-live.
 import { SITE_TITLE, SITE_DESCRIPTION, ANALYTICS_ENABLED, PREVIEW_NOINDEX } from '../consts';
 import { withBase } from '../lib/link';
+import { ogMeta } from '../lib/og-meta.mjs';
 import '../styles/global.css';
 
 interface Props {
   title: string;
   description?: string;
   image?: string; // absolute URL for og:image
+  ogType?: 'website' | 'article'; // 'article' on blog posts -> correct OG typing + article:* tags
+  publishedTime?: string;          // ISO 8601; article:published_time (articles only)
+  modifiedTime?: string;           // ISO 8601; article:modified_time (articles only)
+  author?: string;                 // article:author (articles only)
 }
 
-const { title, description = SITE_DESCRIPTION, image } = Astro.props;
+const { title, description = SITE_DESCRIPTION, image, ogType = 'website', publishedTime, modifiedTime, author } = Astro.props;
+
+// Pure decision for og:type + article:* tags (unit-tested in og-meta.test.ts).
+const og = ogMeta({ ogType, publishedTime, modifiedTime, author });
 
 // Build an absolute OG image URL. Public assets need the base path prepended.
 const siteOrigin = Astro.site?.origin ?? '';
@@ -143,7 +151,7 @@ const siteSchema = JSON.stringify([
 />
 
 <!-- Open Graph -->
-<meta property="og:type" content="website" />
+<meta property="og:type" content={og.type} />
 <meta property="og:url" content={canonicalURL} />
 <meta property="og:title" content={pageTitle} />
 <meta property="og:description" content={description} />
@@ -152,6 +160,11 @@ const siteSchema = JSON.stringify([
 <meta property="og:image:height" content="630" />
 <meta property="og:image:alt" content="Wisco Radio Labs — ham radio, built in the open." />
 <meta property="og:site_name" content={SITE_TITLE} />
+
+<!-- Article-specific OG tags — only on blog posts (ogType="article"). Lets social
+     crawlers type the page as an article and read its publish/update dates + author;
+     the BlogPosting JSON-LD already carries the same facts. Logic in og-meta.mjs. -->
+{og.articleTags.map(t => <meta property={t.property} content={t.content} />)}
 
 <!-- Twitter Card -->
 <meta name="twitter:card" content="summary_large_image" />
