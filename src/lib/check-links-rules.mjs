@@ -1,0 +1,181 @@
+// Pure, exported rule functions for scripts/check-links.mjs.
+//
+// Each function operates on strings (HTML content or raw frontmatter) and
+// returns an array of violation objects — no file I/O, no process.exit,
+// no console.error. This makes every rule independently unit-testable.
+//
+// Callers (the CLI, tests) supply the strings; only the CLI touches the fs.
+//
+// Violation shape: { message: string }
+//   message may contain embedded newlines for multi-line error output, matching
+//   the original multi-console.error style the CLI used before extraction.
+
+// ─── Gate 1: base-path leak detection ───────────────────────────────────────
+
+/**
+ * Returns one violation per root-absolute href or src that lacks the base prefix.
+ * These links 404 on GitHub Pages because the site is served from a sub-path.
+ *
+ * @param {string} html  full HTML file content
+ * @param {string} base  configured base path, e.g. '/wisco-radio-labs-website'
+ * @param {string} [ctx] file label for error messages, e.g. '/blog/index.html'
+ * @returns {{ message: string }[]}
+ */
+export function checkBasePathLeaks(html, base, ctx = '') {
+  const violations = [];
+  // Matches href="/<non-slash>..." and src="/<non-slash>..." — root-absolute only.
+  // Captures just the value so we can inspect it; the full match[0] goes in the message.
+  const re = /(?:href|src)="(\/[^/](?:[^"]*))"/g;
+  let match;
+  while ((match = re.exec(html)) !== null) {
+    const value = match[1];
+    // Allowlist: skip externals, data URIs, blob URIs (captured by the regex but safe)
+    if (/^https?:\/\//.test(value) || /^data:/.test(value) || /^blob:/.test(value)) continue;
+    // Skip fragment-only links (shouldn't reach here given the regex, but guard anyway)
+    if (value.startsWith('#')) continue;
+    // Skip links that correctly include the base
+    if (value.startsWith(base + '/') || value === base || value === base + '/') continue;
+    // Anything else starting with / that is NOT under the base is a leak
+    violations.push({
+      message:
+        `ERROR: root-absolute link without base in ${ctx}\n` +
+        `       Found: ${match[0]}\n` +
+        `       Expected prefix: ${base}/`,
+    });
+  }
+  return violations;
+}
+
+// ─── Gate 2: aria-labelledby / aria-describedby id resolution ───────────────
+
+/**
+ * Returns one violation per aria-labelledby or aria-describedby token that has
+ * no matching id="..." attribute anywhere on the page.
+ *
+ * @param {string} html  full HTML file content
+ * @param {string} [ctx] file label for error messages
+ * @returns {{ message: string }[]}
+ */
+export function checkAriaRefs(html, ctx = '') {
+  const violations = [];
+
+  // Collect every id present in the page
+  const idSet = new Set();
+  const idRe = /\bid="([^"]+)"/g;
+  let match;
+  while ((match = idRe.exec(html)) !== null) idSet.add(match[1]);
+
+  // For each aria-labelledby/describedby, every space-separated token must resolve
+  const ariaRe = /aria-(?:labelledby|describedby)="([^"]+)"/g;
+  while ((match = ariaRe.exec(html)) !== null) {
+    // Extract the attribute name from the full match for the error message
+    const attrName = match[0].match(/aria-[\w]+/)[0];
+    const refs = match[1].trim().split(/\s+/);
+    for (const ref of refs) {
+      if (!idSet.has(ref)) {
+        violations.push({
+          message: `ERROR: ${attrName}="${ref}" has no matching id in ${ctx}`,
+        });
+      }
+    }
+  }
+  return violations;
+}
+
+// ─── Gate 3: exactly one <h1> per page ──────────────────────────────────────
+
+/**
+ * Returns a violation if the page does not contain exactly one <h1> element.
+ *
+ * @param {string} html  full HTML file content
+ * @param {string} [ctx] file label for error messages
+ * @returns {{ message: string }[]}
+ */
+export function checkSingleH1(html, ctx = '') {
+  const h1Matches = html.match(/<h1[\s>]/gi) || [];
+  if (h1Matches.length === 1) return [];
+  return [{ message: `ERROR: expected exactly 1 <h1> in ${ctx}, found ${h1Matches.length}` }];
+}
+
+// ─── Gate 4: no heading-level skips ─────────────────────────────────────────
+
+/**
+ * Returns a violation if any heading descent skips a level (e.g. h1→h3).
+ * Ascending jumps (h3→h1) are always valid. Reports the first skip only.
+ *
+ * @param {string} html  full HTML file content
+ * @param {string} [ctx] file label for error messages
+ * @returns {{ message: string }[]}
+ */
+export function checkHeadingSkip(html, ctx = '') {
+  const headingRe = /<h([1-6])[\s>]/gi;
+  const levels = [];
+  let match;
+  while ((match = headingRe.exec(html)) !== null) {
+    levels.push(parseInt(match[1], 10));
+  }
+  for (let i = 1; i < levels.length; i++) {
+    const prev = levels[i - 1];
+    const curr = levels[i];
+    if (curr > prev + 1) {
+      return [{
+        message: `ERROR: heading skip in ${ctx}: h${prev} → h${curr} (missing h${prev + 1})`,
+      }];
+    }
+  }
+  return [];
+}
+
+// ─── Gate 5: draft-exclusion ─────────────────────────────────────────────────
+// Split into three pure functions so each testable piece can be exercised alone:
+//   parseFrontmatterDraft — detect draft in source
+//   checkDraftHtmlLeak    — detect the HTML-page emission
+//   checkDraftInRss       — detect the RSS mention
+
+/**
+ * Returns true if the markdown file's frontmatter contains `draft: true`.
+ * The caller is responsible for reading the file; this only parses the string.
+ *
+ * @param {string} raw  full .md or .mdx file content
+ * @returns {boolean}
+ */
+export function parseFrontmatterDraft(raw) {
+  // Frontmatter is the first --- ... --- block at the start of the file
+  const fm = raw.match(/^---\r?\n([\s\S]*?)\r?\n---/);
+  return fm ? /^\s*draft:\s*true\s*$/m.test(fm[1]) : false;
+}
+
+/**
+ * Returns a violation if a draft post's HTML page was emitted into dist/.
+ * The caller performs the stat() check; this receives the boolean result.
+ *
+ * @param {string}  slug       post slug (e.g. 'my-draft-post')
+ * @param {string}  file       source filename (e.g. 'my-draft-post.md') — for the error message
+ * @param {boolean} pageExists true if dist/blog/<slug>/ exists on disk
+ * @returns {{ message: string }[]}
+ */
+export function checkDraftHtmlLeak(slug, file, pageExists) {
+  if (!pageExists) return [];
+  return [{
+    message:
+      `ERROR: draft post leaked into production build: dist/blog/${slug}/\n` +
+      `       Source ${file} has draft: true but was emitted.`,
+  }];
+}
+
+/**
+ * Returns one violation per draft slug that appears in the RSS feed.
+ *
+ * @param {string}   rssContent full rss.xml content
+ * @param {string[]} draftSlugs list of known draft post slugs
+ * @returns {{ message: string }[]}
+ */
+export function checkDraftInRss(rssContent, draftSlugs) {
+  const violations = [];
+  for (const slug of draftSlugs) {
+    if (rssContent.includes(`/blog/${slug}/`)) {
+      violations.push({ message: `ERROR: draft post "${slug}" appears in dist/rss.xml` });
+    }
+  }
+  return violations;
+}
