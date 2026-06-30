@@ -43,7 +43,22 @@ Five flat sections: **Home, Blog, Products, About, Contact**. First product feat
 - Known: harmless `markdown.remarkPlugins` deprecation warning on build (Astro 6) — migrate
   `remark-rewrite-links` to the `@astrojs/markdown-remark` API someday; not breaking.
 
-## Status (2026-06-29) — v1 COMPLETE, MERGED TO MAIN, preview LIVE (noindex), domain pending
+## Blog posts (2026-06-29) — first post LIVE; editorial flow established
+- **"Welcome to Wisco Radio Labs" PUBLISHED LIVE** — hero (FT-891 on 20m CW) + QSO screenshot + NorCal 40B
+  build, with captions. De-cluttered per a **marketing-lead** image review (one image per beat; a Driftless
+  stream was cut — kept in `src/assets/blog/welcome-to-wisco-radio-labs/` for a future **About** placement),
+  then tightened per the new **`editor`** agent (broke dense paragraphs, cut repetition), **brand-truth PASS**.
+- **Post flow:** *Travis drafts → `editor` (craft: flow/voice, loads `editing-craft` + `voice-style-guide.md`)
+  → `brand-truth-reviewer` (gate: shipped-facts/voice/ham) → publish.* The `editor` is NOT gated by the
+  marketing-dark directive (editing his own writing isn't advertising).
+- **`heroCaption`** schema field + `<figure>/<figcaption>` in `BlogPost.astro` (hero img stays `alt=""`,
+  decorative; caption carries the text). Hero CSS fixed: was full-bleed `max-height`+`object-fit:cover` (band
+  crop on desktop) → constrained to `--measure`, natural 16:9. **Inline captions** are currently a markdown
+  image + italic line; upgrading them to true `<figure>` is a logged backlog item.
+- **`draft-test-post.md`** is a permanent hidden fixture that keeps the draft-exclusion gate honest — leave it
+  draft. Drafts show in `npm run dev`, hidden in prod (`PROD ? !draft : true`).
+
+## Status (2026-06-29) — v1 COMPLETE, MERGED TO MAIN, preview LIVE (noindex), domain pending; first post published
 Built architect→web-designer→implementer→**test-qa**; **marketing engaged** for the site
 (plan + Tier-1 brand assets + voice guide); **two full all-team review rounds** (4 expert lanes
 + diverse 5-persona UAT panel each) + two fix batches. **Verdict READY, zero blockers;** all
