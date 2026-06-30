@@ -2,6 +2,7 @@ import { defineConfig } from 'astro/config';
 import sitemap from '@astrojs/sitemap';
 import { unified } from '@astrojs/markdown-remark';
 import remarkRewriteLinks from './src/lib/remark-rewrite-links.mjs';
+import rehypeInlineFigure from './src/lib/rehype-inline-figure.mjs';
 
 const BASE = '/wisco-radio-labs-website';
 
@@ -25,7 +26,11 @@ export default defineConfig({
     // merges cleanly with GFM/smartypants defaults.
     //
     // Domain go-live: set site to domain, remove base, remove remarkRewriteLinks.
-    processor: unified({ remarkPlugins: [[remarkRewriteLinks, { base: BASE }]] }),
+    processor: unified({
+      remarkPlugins: [[remarkRewriteLinks, { base: BASE }]],
+      // Promote inline image paragraphs to semantic <figure>/<figcaption>.
+      rehypePlugins: [rehypeInlineFigure],
+    }),
   },
   // image: defaults (sharp) are fine
 });
