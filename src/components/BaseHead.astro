@@ -132,8 +132,14 @@ const siteSchema = JSON.stringify([
      iterate. Flip PREVIEW_NOINDEX to false in consts.ts at real go-live. -->
 {PREVIEW_NOINDEX && <meta name="robots" content="noindex, nofollow" />}
 
-<!-- Favicon: SVG (preferred) + PNG fallbacks for browsers that only accept raster.
-     All paths go through withBase() — required for the GH Pages sub-path deploy. -->
+<!-- Favicon stack — all paths go through withBase() for GH Pages sub-path deploy.
+     .ico  (sizes="any") — multi-res PNG-payload ICO (16/32/48): the universal
+           fallback browsers fetch at /favicon.ico before the <link> hints load;
+           fixes Firefox iOS showing a letter-tile when no .ico is present.
+     SVG   — preferred by modern desktop browsers (vector, no raster rounding).
+     PNG   — explicit-size raster hints for browsers that need them.
+     Apple Touch Icon — iOS/iPadOS home-screen bookmark. -->
+<link rel="icon" href={withBase('/favicon.ico')} sizes="any" />
 <link rel="icon" type="image/svg+xml" href={withBase('/favicon.svg')} />
 <link rel="icon" type="image/png" sizes="32x32" href={withBase('/icons/icon-32.png')} />
 <link rel="icon" type="image/png" sizes="16x16" href={withBase('/icons/icon-16.png')} />
