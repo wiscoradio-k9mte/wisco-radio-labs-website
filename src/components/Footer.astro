@@ -99,6 +99,15 @@ import logo from '../assets/brand/wisco-radio-labs-logo.png';
       grid-template-columns: 1fr 1fr 1fr;
       align-items: start;
     }
+
+    /* Each group is in its own narrow grid column on desktop — stacked column reads
+       better there than horizontal wrap, so restore the column direction. */
+    .footer-nav ul,
+    .footer-contact {
+      flex-direction: column;
+      flex-wrap: nowrap;
+      gap: var(--space-1);
+    }
   }
 
   /* Group 1 — brand */
@@ -147,8 +156,12 @@ import logo from '../assets/brand/wisco-radio-labs-logo.png';
     margin: 0;
     padding: 0;
     display: flex;
-    flex-direction: column;
-    gap: var(--space-1);
+    /* Mobile: links flow left-to-right and wrap rather than stacking one-per-row.
+       flex-direction resets to column inside the 3-col grid at the desktop breakpoint. */
+    flex-direction: row;
+    flex-wrap: wrap;
+    /* row-gap keeps wrapped lines breathable; column-gap separates items in a row */
+    gap: var(--space-2) var(--space-4);
   }
 
   .footer-nav a {
@@ -167,8 +180,10 @@ import logo from '../assets/brand/wisco-radio-labs-logo.png';
   /* Group 3 — contact */
   .footer-contact {
     display: flex;
-    flex-direction: column;
-    gap: var(--space-1);
+    /* Mobile: same horizontal-wrap pattern as .footer-nav ul above. */
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: var(--space-2) var(--space-4);
   }
 
   .footer-link {
