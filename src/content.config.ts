@@ -14,6 +14,8 @@ const blog = defineCollection({
       updatedDate: z.coerce.date().optional(),
       // co-located image, optimized by astro:assets — yields base-path-correct hashed URL
       heroImage: image().optional(),
+      // optional visible caption rendered under the hero (figcaption)
+      heroCaption: z.string().optional(),
       tags: z.array(z.string()).default([]),
       draft: z.boolean().default(false),
       // YouTube video id or full URL for vlog posts; YouTubeEmbed.astro normalizes to id
