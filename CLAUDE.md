@@ -46,7 +46,7 @@ Five flat sections: **Home, Blog, Products, About, Contact**. First product feat
 ## Blog posts (2026-06-29) — first post LIVE; editorial flow established
 - **"Welcome to Wisco Radio Labs" PUBLISHED LIVE** — hero (FT-891 on 20m CW) + QSO screenshot + NorCal 40B
   build, with captions. De-cluttered per a **marketing-lead** image review (one image per beat; a Driftless
-  stream was cut — kept in `src/assets/blog/welcome-to-wisco-radio-labs/` for a future **About** placement),
+  stream was cut from the post and the asset removed in the 2026-06-29 cleanup),
   then tightened per the new **`editor`** agent (broke dense paragraphs, cut repetition), **brand-truth PASS**.
 - **Post flow:** *Travis drafts → `editor` (craft: flow/voice, loads `editing-craft` + `voice-style-guide.md`)
   → `brand-truth-reviewer` (gate: shipped-facts/voice/ham) → publish.* The `editor` is NOT gated by the
