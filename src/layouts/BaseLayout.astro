@@ -10,14 +10,26 @@ interface Props {
   title: string;
   description?: string;
   image?: string; // absolute URL for og:image
+  ogType?: 'website' | 'article'; // pass 'article' from BlogPost; defaults to 'website'
+  publishedTime?: string;          // ISO 8601 (articles)
+  modifiedTime?: string;           // ISO 8601 (articles)
+  author?: string;                 // article:author (articles)
 }
 
-const { title = SITE_TITLE, description, image } = Astro.props;
+const { title = SITE_TITLE, description, image, ogType, publishedTime, modifiedTime, author } = Astro.props;
 ---
 <!doctype html>
 <html lang="en">
   <head>
-    <BaseHead title={title} description={description} image={image} />
+    <BaseHead
+      title={title}
+      description={description}
+      image={image}
+      ogType={ogType}
+      publishedTime={publishedTime}
+      modifiedTime={modifiedTime}
+      author={author}
+    />
 
     <!--
       No-FOUC theme init — MUST be inline, MUST be before any stylesheet that paints.

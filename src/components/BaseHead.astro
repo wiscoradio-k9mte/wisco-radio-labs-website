@@ -15,9 +15,13 @@ interface Props {
   title: string;
   description?: string;
   image?: string; // absolute URL for og:image
+  ogType?: 'website' | 'article'; // 'article' on blog posts -> correct OG typing + article:* tags
+  publishedTime?: string;          // ISO 8601; article:published_time (articles only)
+  modifiedTime?: string;           // ISO 8601; article:modified_time (articles only)
+  author?: string;                 // article:author (articles only)
 }
 
-const { title, description = SITE_DESCRIPTION, image } = Astro.props;
+const { title, description = SITE_DESCRIPTION, image, ogType = 'website', publishedTime, modifiedTime, author } = Astro.props;
 
 // Build an absolute OG image URL. Public assets need the base path prepended.
 const siteOrigin = Astro.site?.origin ?? '';
@@ -143,7 +147,7 @@ const siteSchema = JSON.stringify([
 />
 
 <!-- Open Graph -->
-<meta property="og:type" content="website" />
+<meta property="og:type" content={ogType} />
 <meta property="og:url" content={canonicalURL} />
 <meta property="og:title" content={pageTitle} />
 <meta property="og:description" content={description} />
@@ -152,6 +156,13 @@ const siteSchema = JSON.stringify([
 <meta property="og:image:height" content="630" />
 <meta property="og:image:alt" content="Wisco Radio Labs — ham radio, built in the open." />
 <meta property="og:site_name" content={SITE_TITLE} />
+
+<!-- Article-specific OG tags — only on blog posts (ogType="article"). Lets social
+     crawlers type the page as an article and read its publish/update dates + author;
+     the BlogPosting JSON-LD already carries the same facts. -->
+{ogType === 'article' && publishedTime && <meta property="article:published_time" content={publishedTime} />}
+{ogType === 'article' && modifiedTime && <meta property="article:modified_time" content={modifiedTime} />}
+{ogType === 'article' && author && <meta property="article:author" content={author} />}
 
 <!-- Twitter Card -->
 <meta name="twitter:card" content="summary_large_image" />

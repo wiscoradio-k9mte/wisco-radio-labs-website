@@ -46,7 +46,14 @@ const postSchema = JSON.stringify({
 // but the slot content will fill it. Omit estimate for now (accurate word count
 // would need a remark plugin — noted as a future nice-to-have).
 ---
-<BaseLayout title={title} description={description}>
+<BaseLayout
+  title={title}
+  description={description}
+  ogType="article"
+  publishedTime={pubDate.toISOString()}
+  modifiedTime={updatedDate ? updatedDate.toISOString() : undefined}
+  author="Travis Engh"
+>
   <!-- BlogPosting JSON-LD injected into <head> via BaseLayout's named slot.
        is:inline silences the Astro hint — intentionally a raw JSON block. -->
   <script is:inline type="application/ld+json" slot="head" set:html={postSchema} />
