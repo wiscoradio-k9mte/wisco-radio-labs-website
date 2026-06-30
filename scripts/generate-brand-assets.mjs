@@ -11,6 +11,7 @@
  *
  * Outputs:
  *   public/og-default.png           1200×630  — default social share card
+ *   public/favicon.ico              multi-res — 16×16 + 32×32 + 48×48 (PNG-payload ICO)
  *   public/icons/icon-16.png         16×16   — browser favicon (raster)
  *   public/icons/icon-32.png         32×32   — browser favicon (raster)
  *   public/icons/apple-touch-icon.png  180×180 — iOS home-screen icon
@@ -238,10 +239,105 @@ async function generateIcons() {
   }
 }
 
+// ── 4. Generate favicon.ico — multi-resolution PNG-payload ICO container ──────
+//
+// Why hand-assemble instead of a library?  sharp cannot emit .ico, and adding
+// a png-to-ico package would be the only reason for a new dependency — not worth
+// it for a 30-line container assembler.  PNG-payload ICO is accepted by all
+// modern browsers (Chrome, Firefox, Safari, Edge), which is exactly the audience
+// that hits /favicon.ico before the <link> hints are parsed.
+//
+// ICO wire format (all integers little-endian):
+//
+//   ICONDIR (6 bytes):
+//     uint16  reserved  — must be 0
+//     uint16  type      — 1 = icon (.ico)
+//     uint16  count     — number of images
+//
+//   ICONDIRENTRY × count (16 bytes each):
+//     uint8   width     — image width in px (0 means 256)
+//     uint8   height    — image height in px
+//     uint8   palette   — number of palette colors (0 = no palette)
+//     uint8   reserved  — must be 0
+//     uint16  planes    — color planes (1)
+//     uint16  bpp       — bits per pixel (32 for RGBA PNG)
+//     uint32  size      — byte length of this image's data
+//     uint32  offset    — byte offset of this image's data from file start
+//
+//   Then the raw PNG blobs concatenated (in the order the entries reference them).
+//
+// Offset arithmetic:
+//   header  = 6 + (16 × count) bytes
+//   image 0 starts at `header`
+//   image n starts at `header + sum(sizes of images 0..n-1)`
+//
+async function generateFaviconIco() {
+  console.log('Generating public/favicon.ico (16×16, 32×32, 48×48)…');
+
+  const faviconSvg = await readFile(join(PUBLIC, 'favicon.svg'));
+  const sizes = [16, 32, 48];
+
+  // Render each size to a PNG buffer.  density:300 lets librsvg rasterize the SVG
+  // at high DPI before the resize, so small sizes stay crisp.
+  const pngBuffers = await Promise.all(
+    sizes.map(size =>
+      sharp(faviconSvg, { density: 300 })
+        .resize(size, size)
+        .png({ compressionLevel: 9 })
+        .toBuffer()
+    )
+  );
+
+  // Verify each PNG is well-formed before we seal it into the container.
+  // sharp.metadata() parses the PNG header — if this throws, the buffer is corrupt.
+  for (let i = 0; i < sizes.length; i++) {
+    const meta = await sharp(pngBuffers[i]).metadata();
+    if (meta.width !== sizes[i] || meta.height !== sizes[i]) {
+      throw new Error(
+        `favicon.ico: ${sizes[i]}px PNG has unexpected dimensions ${meta.width}×${meta.height}`
+      );
+    }
+  }
+
+  const count      = sizes.length;        // 3
+  const headerSize = 6 + 16 * count;      // 6 + 48 = 54 bytes
+
+  const header = Buffer.alloc(headerSize);
+
+  // ICONDIR
+  header.writeUInt16LE(0, 0);      // reserved
+  header.writeUInt16LE(1, 2);      // type: 1 = icon
+  header.writeUInt16LE(count, 4);  // image count
+
+  // ICONDIRENTRY for each size; track the running file offset as we go.
+  let fileOffset = headerSize;
+  for (let i = 0; i < count; i++) {
+    const base   = 6 + 16 * i;
+    const sz     = sizes[i];
+    const pngLen = pngBuffers[i].length;
+
+    header.writeUInt8(sz, base);           // width
+    header.writeUInt8(sz, base + 1);       // height
+    header.writeUInt8(0,  base + 2);       // palette count (0 = none)
+    header.writeUInt8(0,  base + 3);       // reserved
+    header.writeUInt16LE(1,  base + 4);    // color planes
+    header.writeUInt16LE(32, base + 6);    // bits per pixel
+    header.writeUInt32LE(pngLen,     base + 8);   // image data size
+    header.writeUInt32LE(fileOffset, base + 12);  // image data offset
+
+    fileOffset += pngLen;
+  }
+
+  const icoBuffer = Buffer.concat([header, ...pngBuffers]);
+  await writeFile(join(PUBLIC, 'favicon.ico'), icoBuffer);
+  console.log('  ✓ public/favicon.ico');
+}
+
 // ── Main ──────────────────────────────────────────────────────────────────────
 // Font setup MUST run before generateOgCard() — librsvg reads FONTCONFIG_FILE
 // lazily (on first SVG text render), so setting it here in time is what matters.
 await prepareFontconfig();
 await generateOgCard();
 await generateIcons();
-console.log('\nDone. Commit public/og-default.png and public/icons/ to the repo.');
+await generateFaviconIco();
+console.log('\nDone. Commit public/og-default.png, public/icons/, and public/favicon.ico to the repo.');
