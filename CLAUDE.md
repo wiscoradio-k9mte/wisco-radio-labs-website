@@ -37,7 +37,9 @@ Five flat sections: **Home, Blog, Products, About, Contact**. First product feat
   PREVIEW_NOINDEX), `src/lib/link.ts` (`withBase`), brand assets via
   `scripts/generate-brand-assets.mjs` (OG card `public/og-default.png`, favicons, manifest).
 - Design/intent docs: `docs/architecture.md`, `design-system.md`, `layouts.md`,
-  `website-marketing-plan.md`, `copy-voice-pass.md`, **`voice-style-guide.md`**.
+  `website-marketing-plan.md`, `copy-voice-pass.md`, **`voice-style-guide.md`**,
+  **`image-seo-conventions.md`** (THE image standard: lowercase-kebab filenames,
+  `src/assets/blog/<post-slug>/` layout, alt-text-first SEO priority, format/size).
 - Known: harmless `markdown.remarkPlugins` deprecation warning on build (Astro 6) — migrate
   `remark-rewrite-links` to the `@astrojs/markdown-remark` API someday; not breaking.
 
