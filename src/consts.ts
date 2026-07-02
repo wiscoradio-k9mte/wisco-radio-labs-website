@@ -29,6 +29,10 @@ export const SOCIAL_LINKS = {
   github: 'https://github.com/wiscoradio-k9mte',
 } as const;
 
+// Buy Me a Coffee — footer support link. Plain anchor only, no widget/script
+// (the site ships zero JS bundles).
+export const BMC_URL = 'https://buymeacoffee.com/wiscoradiolabs';
+
 // Analytics insertion point.
 // Set to true and add the vendor <script> in BaseHead.astro when the domain is live.
 // Analytics vendor is an open decision for Travis — not picked silently here.

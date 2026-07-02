@@ -1,6 +1,6 @@
 ---
 import { Image } from 'astro:assets';
-import { SITE_TITLE, NAV_ITEMS, SOCIAL_LINKS, CONTACT_EMAIL } from '../consts';
+import { SITE_TITLE, NAV_ITEMS, SOCIAL_LINKS, CONTACT_EMAIL, BMC_URL } from '../consts';
 import { withBase } from '../lib/link';
 import logo from '../assets/brand/wisco-radio-labs-logo.png';
 ---
@@ -77,6 +77,15 @@ import logo from '../assets/brand/wisco-radio-labs-logo.png';
   <div class="footer-bottom">
     <div class="container">
       <p>&copy; 2026 Wisco Radio Labs &middot; Made in the Driftless</p>
+      <p class="footer-support">
+        <a
+          href={BMC_URL}
+          class="footer-support-link"
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="Buy me a coffee — support Wisco Radio Labs (opens in new tab)"
+        >Enjoying the projects? ☕ Buy me a coffee</a>
+      </p>
     </div>
   </div>
 </footer>
@@ -212,4 +221,17 @@ import logo from '../assets/brand/wisco-radio-labs-logo.png';
     font-size: var(--fs-caption);
     color: var(--text-muted);
   }
+
+  .footer-bottom .footer-support {
+    margin-top: var(--space-2);
+  }
+
+  .footer-support-link {
+    color: var(--text-muted);
+    text-decoration: none;
+    transition: color 150ms ease;
+  }
+
+  .footer-support-link:hover { color: var(--brand-ink); }
+  .footer-support-link:focus-visible { outline: 3px solid var(--focus-ring); outline-offset: 2px; border-radius: var(--radius-sm); }
 </style>

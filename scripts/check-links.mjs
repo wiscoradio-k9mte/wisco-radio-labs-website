@@ -9,6 +9,9 @@
 //   4. No heading-level skips (h1→h3 without an intervening h2, etc.).
 //   5. No draft: true post leaks into any dist/blog/<slug>/ directory.
 //   6. No draft: true post leaks into dist/rss.xml.
+//   7. The footer's "Buy Me a Coffee" link is present on every page with the
+//      exact expected href and the target="_blank" + rel="noopener noreferrer"
+//      safety attributes an external link needs.
 //
 // Run after `npm run build`:
 //   npm run test:links
@@ -27,12 +30,14 @@ import {
   parseFrontmatterDraft,
   checkDraftHtmlLeak,
   checkDraftInRss,
+  checkBmcLink,
 } from '../src/lib/check-links-rules.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const DIST = join(__dirname, '..', 'dist');
 const BLOG_CONTENT = join(__dirname, '..', 'src', 'content', 'blog');
 const BASE = '/wisco-radio-labs-website'; // must match astro.config.mjs base
+const BMC_URL = 'https://buymeacoffee.com/wiscoradiolabs'; // must match BMC_URL in src/consts.ts
 
 let errors = 0;
 let filesChecked = 0;
@@ -62,6 +67,7 @@ async function checkFile(filePath) {
     ...checkAriaRefs(content, context),
     ...checkSingleH1(content, context),
     ...checkHeadingSkip(content, context),
+    ...checkBmcLink(content, BMC_URL, context),
   ];
   for (const v of violations) {
     console.error(v.message);
@@ -146,6 +152,6 @@ if (errors > 0) {
   console.error('Fix all issues above, rebuild, and re-run.');
   process.exit(1);
 } else {
-  console.log(`Build-output OK: ${filesChecked} HTML file(s) checked — 0 base-path leaks, 0 aria-id mismatches, 0 h1 violations, 0 heading skips, 0 draft leaks.`);
+  console.log(`Build-output OK: ${filesChecked} HTML file(s) checked — 0 base-path leaks, 0 aria-id mismatches, 0 h1 violations, 0 heading skips, 0 draft leaks, 0 missing BMC links.`);
   process.exit(0);
 }

@@ -17,9 +17,11 @@ import {
   parseFrontmatterDraft,
   checkDraftHtmlLeak,
   checkDraftInRss,
+  checkBmcLink,
 } from './check-links-rules.mjs';
 
 const BASE = '/wisco-radio-labs-website';
+const BMC_URL = 'https://buymeacoffee.com/wiscoradiolabs';
 
 // ─── Gate 1: checkBasePathLeaks ───────────────────────────────────────────────
 
@@ -283,5 +285,54 @@ describe('checkDraftInRss', () => {
   it('reports multiple draft slugs that all appear in the RSS', () => {
     const rss = `/blog/draft-a/ and /blog/draft-b/`;
     expect(checkDraftInRss(rss, ['draft-a', 'draft-b'])).toHaveLength(2);
+  });
+});
+
+// ─── Gate 7: checkBmcLink ─────────────────────────────────────────────────────
+
+describe('checkBmcLink', () => {
+  it('does not report when the link is present with the correct href and safety attrs', () => {
+    const html = `<a href="${BMC_URL}" target="_blank" rel="noopener noreferrer">Buy me a coffee</a>`;
+    expect(checkBmcLink(html, BMC_URL)).toHaveLength(0);
+  });
+
+  it('reports when the footer link is missing entirely', () => {
+    const html = '<footer><p>&copy; 2026</p></footer>';
+    const vs = checkBmcLink(html, BMC_URL);
+    expect(vs).toHaveLength(1);
+    expect(vs[0].message).toContain('missing "Buy Me a Coffee" footer link');
+    expect(vs[0].message).toContain(BMC_URL);
+  });
+
+  it('reports when the href points at the wrong URL', () => {
+    const html = '<a href="https://buymeacoffee.com/someone-else" target="_blank" rel="noopener noreferrer">coffee</a>';
+    const vs = checkBmcLink(html, BMC_URL);
+    expect(vs).toHaveLength(1);
+    expect(vs[0].message).toContain('missing "Buy Me a Coffee" footer link');
+  });
+
+  it('reports when target="_blank" is missing', () => {
+    const html = `<a href="${BMC_URL}" rel="noopener noreferrer">coffee</a>`;
+    const vs = checkBmcLink(html, BMC_URL);
+    expect(vs).toHaveLength(1);
+    expect(vs[0].message).toContain('missing target="_blank"');
+  });
+
+  it('reports when rel="noopener noreferrer" is missing', () => {
+    const html = `<a href="${BMC_URL}" target="_blank">coffee</a>`;
+    const vs = checkBmcLink(html, BMC_URL);
+    expect(vs).toHaveLength(1);
+    expect(vs[0].message).toContain('missing rel="noopener noreferrer"');
+  });
+
+  it('accepts rel attribute order reversed (noreferrer noopener)', () => {
+    const html = `<a href="${BMC_URL}" target="_blank" rel="noreferrer noopener">coffee</a>`;
+    expect(checkBmcLink(html, BMC_URL)).toHaveLength(0);
+  });
+
+  it('includes the context label in the violation message', () => {
+    const html = '<footer></footer>';
+    const vs = checkBmcLink(html, BMC_URL, '/about/index.html');
+    expect(vs[0].message).toContain('/about/index.html');
   });
 });
