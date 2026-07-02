@@ -179,3 +179,35 @@ export function checkDraftInRss(rssContent, draftSlugs) {
   }
   return violations;
 }
+
+// ─── Gate 7: footer "Buy Me a Coffee" link present on every page ───────────
+
+/**
+ * Returns a violation if the page's footer is missing the Buy Me a Coffee
+ * link, or the link is missing the noopener/noreferrer safety attributes an
+ * external target="_blank" anchor needs.
+ *
+ * @param {string} html full HTML file content
+ * @param {string} url  the exact BMC href expected (BMC_URL from src/consts.ts)
+ * @param {string} [ctx] file label for error messages
+ * @returns {{ message: string }[]}
+ */
+export function checkBmcLink(html, url, ctx = '') {
+  // Escape regex metacharacters in the URL so it matches literally.
+  const escaped = url.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const anchorRe = new RegExp(`<a\\b[^>]*href="${escaped}"[^>]*>`, 'i');
+  const match = html.match(anchorRe);
+  if (!match) {
+    return [{ message: `ERROR: missing "Buy Me a Coffee" footer link (href="${url}") in ${ctx}` }];
+  }
+  const tag = match[0];
+  const violations = [];
+  if (!/target="_blank"/.test(tag)) {
+    violations.push({ message: `ERROR: "Buy Me a Coffee" link in ${ctx} is missing target="_blank"` });
+  }
+  if (!/rel="[^"]*\bnoopener\b[^"]*\bnoreferrer\b[^"]*"/.test(tag) &&
+      !/rel="[^"]*\bnoreferrer\b[^"]*\bnoopener\b[^"]*"/.test(tag)) {
+    violations.push({ message: `ERROR: "Buy Me a Coffee" link in ${ctx} is missing rel="noopener noreferrer"` });
+  }
+  return violations;
+}
