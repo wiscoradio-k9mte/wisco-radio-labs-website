@@ -1,0 +1,54 @@
+# Dependency Review — block vulnerable / badly-licensed deps at PR time
+#
+# Runs on every pull request. Diffs the dependency manifest + lockfile and
+# fails the PR if it would introduce a dependency with a known vulnerability
+# at or above 'high', or a license outside our allow-list. This catches a bad
+# dependency at review time — BEFORE it merges — which is the gap Dependabot
+# (which only acts on already-merged deps) leaves open.
+#
+# The deny-list targets network-copyleft / source-available licenses that are
+# legally murky to redistribute in a public open web project. Adjust the lists
+# if a legitimate dep is blocked.
+#
+# Mirrors CW Trainer so the two public repos share one dependency-review gate.
+# Owned by the security-engineer.
+
+name: Dependency Review
+
+on:
+  pull_request:
+    branches: [main]
+
+# Read-only: the action reads the PR diff and (optionally) posts a summary.
+permissions:
+  contents: read
+
+concurrency:
+  group: dep-review-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  dependency-review:
+    name: Review dependency changes
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      pull-requests: write   # post the review summary comment on the PR
+
+    steps:
+      - name: Checkout
+        # actions/checkout v7.0.0
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+        with:
+          persist-credentials: false
+
+      - name: Dependency Review
+        # actions/dependency-review-action v5.0.0
+        uses: actions/dependency-review-action@a1d282b36b6f3519aa1f3fc636f609c47dddb294
+        with:
+          # Fail the PR on a newly-introduced vuln of high severity or worse.
+          fail-on-severity: high
+          # Deny licenses that are incompatible or commercially restrictive.
+          deny-licenses: 'AGPL-1.0-only, AGPL-3.0-only, BUSL-1.1, SSPL-1.0'
+          comment-summary-in-pr: on-failure
