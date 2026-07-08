@@ -5,16 +5,20 @@ on:
     # main is the canonical source — deploys the GitHub Pages preview.
     # (Still a preview: noindex on, no custom domain yet. See PREVIEW_NOINDEX in src/consts.ts.)
     branches: [main]
+  pull_request:
+    # Gate PRs with the same build/test/link-check suite before merge. Never
+    # deploys — the deploy job below only runs on a push to main.
+    branches: [main]
   workflow_dispatch: # allow manual runs
 
 permissions:
   contents: read
-  pages: write
-  id-token: write
 
-# Only one deploy runs at a time; in-progress deploys are cancelled on new push.
+# One run at a time per ref; a superseded run on the SAME ref is cancelled.
+# main's push runs and each PR's runs land in different groups (github.ref
+# differs per PR), so a new PR push can never cancel an in-flight Pages deploy.
 concurrency:
-  group: pages
+  group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -36,7 +40,8 @@ jobs:
 
       # Unit tests — run AFTER build so import.meta.env.PROD is irrelevant to dist/,
       # but these are pure-logic tests that don't need dist/. Both gates must pass
-      # before the deploy job is allowed to run (it depends on this job via `needs: build`).
+      # before the deploy job is allowed to run (it depends on this job via `needs: build`)
+      # — and, on a PR, before it's mergeable once branch protection requires this check.
       - name: Unit tests (vitest)
         run: npm test
 
@@ -49,7 +54,13 @@ jobs:
   deploy:
     name: Deploy
     needs: build
+    # Deploy only on a push to main — never on a pull_request event, even one
+    # opened against main. Keeps every PR run build/test/link-check only.
+    if: github.event_name == 'push'
     runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
