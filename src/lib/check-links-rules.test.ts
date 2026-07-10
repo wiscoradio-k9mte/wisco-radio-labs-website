@@ -18,10 +18,15 @@ import {
   checkDraftHtmlLeak,
   checkDraftInRss,
   checkBmcLink,
+  findLeakedEmails,
+  checkCommentHtmlPii,
+  checkCommentSourcePii,
+  checkDraftCommentLeak,
 } from './check-links-rules.mjs';
 
 const BASE = '/wisco-radio-labs-website';
 const BMC_URL = 'https://buymeacoffee.com/wiscoradiolabs';
+const CONTACT_EMAIL = 'wiscoradio@gmail.com';
 
 // ─── Gate 1: checkBasePathLeaks ───────────────────────────────────────────────
 
@@ -334,5 +339,150 @@ describe('checkBmcLink', () => {
     const html = '<footer></footer>';
     const vs = checkBmcLink(html, BMC_URL, '/about/index.html');
     expect(vs[0].message).toContain('/about/index.html');
+  });
+});
+
+// ─── Gate 8: findLeakedEmails / checkCommentHtmlPii / checkCommentSourcePii ──
+
+describe('findLeakedEmails', () => {
+  it('reports an email-shaped string not on the allowlist', () => {
+    expect(findLeakedEmails('reach me at sarah@example.com please', [])).toEqual(['sarah@example.com']);
+  });
+
+  it('excludes an exact allowlisted match', () => {
+    expect(findLeakedEmails(`contact ${CONTACT_EMAIL}`, [CONTACT_EMAIL])).toEqual([]);
+  });
+
+  it('still reports a DIFFERENT email even when the allowlisted one is also present', () => {
+    // Proves the allowlist can't be used to mask an unrelated leak.
+    const text = `official: ${CONTACT_EMAIL}, personal: leaker@example.com`;
+    expect(findLeakedEmails(text, [CONTACT_EMAIL])).toEqual(['leaker@example.com']);
+  });
+
+  it('reports nothing when the text has no email-shaped string', () => {
+    expect(findLeakedEmails('just a normal comment, no addresses here', [CONTACT_EMAIL])).toEqual([]);
+  });
+});
+
+describe('checkCommentHtmlPii', () => {
+  // Fixtures below use the REAL tag each region renders as in CommentThreadView.astro —
+  // author name is a <span>, comment BODY is a <p class="comment-body" data-comment-text>.
+  // A prior version of this test suite used <span> for both, which matched the (then
+  // span-only) scanner regex but NOT the actual template — the gate proved a real
+  // rendered-body leak reached dist/ with zero scan error under that mismatch.
+
+  it('reports an email-shaped string found inside a data-comment-text SPAN (author name)', () => {
+    const html = '<span class="comment-author-name" data-comment-text>leaker@example.com</span>';
+    const vs = checkCommentHtmlPii(html, [CONTACT_EMAIL]);
+    expect(vs).toHaveLength(1);
+    expect(vs[0].message).toContain('leaker@example.com');
+    expect(vs[0].message).toContain('rendered comment content');
+  });
+
+  it('reports an email-shaped string found inside a data-comment-text P (comment body — the real tag CommentThreadView uses)', () => {
+    const html = '<p class="comment-body" data-comment-text>email me at leaker@example.com</p>';
+    const vs = checkCommentHtmlPii(html, [CONTACT_EMAIL]);
+    expect(vs).toHaveLength(1);
+    expect(vs[0].message).toContain('leaker@example.com');
+  });
+
+  it('does not report the allowlisted CONTACT_EMAIL inside a data-comment-text P', () => {
+    const html = `<p class="comment-body" data-comment-text>email me at ${CONTACT_EMAIL}</p>`;
+    expect(checkCommentHtmlPii(html, [CONTACT_EMAIL])).toHaveLength(0);
+  });
+
+  it('does NOT report an email-shaped string OUTSIDE any data-comment-text region (scoping proof)', () => {
+    // Simulates the footer mailto link + a form placeholder elsewhere on the same page —
+    // neither is comment content, so the scoped scan must ignore them.
+    const html = '<a href="mailto:someone@example.com">Email</a><p data-comment-text>hello</p>';
+    expect(checkCommentHtmlPii(html, [CONTACT_EMAIL])).toHaveLength(0);
+  });
+
+  it('includes the context label in the violation message', () => {
+    const html = '<p data-comment-text>leaker@example.com</p>';
+    const vs = checkCommentHtmlPii(html, [CONTACT_EMAIL], '/blog/post/index.html');
+    expect(vs[0].message).toContain('/blog/post/index.html');
+  });
+
+  it('does not let a <span>...<p> mismatch cross-close (a span opening must close with a span, a p with a p)', () => {
+    // Regression guard for the backreferenced-tag regex: adjacent span+p regions must
+    // not let the scanner's greedy match span from the <span> open to the <p> close
+    // (which would silently swallow real page content in between as "comment text").
+    const html = '<span data-comment-text>Sarah</span><p>unrelated page content, not a comment</p><p data-comment-text>leaker@example.com</p>';
+    const vs = checkCommentHtmlPii(html, [CONTACT_EMAIL]);
+    expect(vs).toHaveLength(1);
+    expect(vs[0].message).toContain('leaker@example.com');
+  });
+
+  // ─── Real rendered fragment (Container API) — ties this gate to the ACTUAL template ──
+  it('REAL RENDER: catches an email-shaped string planted in a CommentThreadView-rendered comment body', async () => {
+    const { experimental_AstroContainer: AstroContainer } = await import('astro/container');
+    const { default: CommentThreadView } = await import('../components/CommentThreadView.astro');
+    const container = await AstroContainer.create();
+    const html = await container.renderToString(CommentThreadView, {
+      props: {
+        comments: [
+          {
+            id: 'c1',
+            parentId: null,
+            author: 'Sarah',
+            date: new Date('2026-07-09'),
+            body: 'reach me at leaker@example.com if you want to chat',
+          },
+        ],
+      },
+    });
+    const vs = checkCommentHtmlPii(html, [CONTACT_EMAIL]);
+    expect(vs).toHaveLength(1);
+    expect(vs[0].message).toContain('leaker@example.com');
+  });
+
+  it('REAL RENDER: a clean CommentThreadView-rendered comment produces zero violations', async () => {
+    const { experimental_AstroContainer: AstroContainer } = await import('astro/container');
+    const { default: CommentThreadView } = await import('../components/CommentThreadView.astro');
+    const container = await AstroContainer.create();
+    const html = await container.renderToString(CommentThreadView, {
+      props: {
+        comments: [
+          { id: 'c1', parentId: null, author: 'Sarah', date: new Date('2026-07-09'), body: 'Great post, thanks!' },
+        ],
+      },
+    });
+    expect(checkCommentHtmlPii(html, [CONTACT_EMAIL])).toHaveLength(0);
+  });
+});
+
+describe('checkCommentSourcePii', () => {
+  it('reports an email-shaped string added as an unauthorized "email:" key in raw YAML', () => {
+    const raw = 'postSlug: my-post\nid: my-post-1\nauthor: Sarah\nemail: sarah@example.com\nbody: hi\n';
+    const vs = checkCommentSourcePii(raw, [CONTACT_EMAIL], 'my-post-1.yaml');
+    expect(vs).toHaveLength(1);
+    expect(vs[0].message).toContain('sarah@example.com');
+    expect(vs[0].message).toContain('my-post-1.yaml');
+  });
+
+  it('does not report a clean comment source file', () => {
+    const raw = 'postSlug: my-post\nid: my-post-1\nauthor: Sarah\nbody: no addresses here\n';
+    expect(checkCommentSourcePii(raw, [CONTACT_EMAIL])).toHaveLength(0);
+  });
+
+  it('does not report the allowlisted CONTACT_EMAIL appearing in a body', () => {
+    const raw = `postSlug: my-post\nid: my-post-1\nauthor: Sarah\nbody: reach the site at ${CONTACT_EMAIL}\n`;
+    expect(checkCommentSourcePii(raw, [CONTACT_EMAIL])).toHaveLength(0);
+  });
+});
+
+// ─── Gate 9: checkDraftCommentLeak ───────────────────────────────────────────
+
+describe('checkDraftCommentLeak', () => {
+  it('reports a violation when a draft-post comment appears in dist/', () => {
+    const vs = checkDraftCommentLeak('draft-test-post-fixture-1', 'draft-test-post', true);
+    expect(vs).toHaveLength(1);
+    expect(vs[0].message).toContain('draft-test-post-fixture-1');
+    expect(vs[0].message).toContain('draft-test-post');
+  });
+
+  it('returns no violation when the comment does not appear in dist/', () => {
+    expect(checkDraftCommentLeak('draft-test-post-fixture-1', 'draft-test-post', false)).toHaveLength(0);
   });
 });

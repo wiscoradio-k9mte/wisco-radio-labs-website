@@ -300,6 +300,16 @@ const isPlaceholder = WEB3FORMS_KEY === 'PLACEHOLDER_WEB3FORMS_KEY';
 </script>
 
 <style>
+  /* [hidden] fix (found while building blog comments, same pattern reused there):
+     author CSS always wins over the UA stylesheet's `[hidden] { display: none }`,
+     regardless of selector specificity — so `.form-error { display: flex }` below
+     was silently overriding `hidden` and showing every error/status on page load,
+     before any validation ever ran. This restores the native hidden behavior. */
+  .form-error[hidden],
+  .form-status[hidden] {
+    display: none;
+  }
+
   /* ─── Placeholder / mailto fallback ── */
   .email-fallback {
     display: flex;
