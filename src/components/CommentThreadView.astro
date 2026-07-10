@@ -1,0 +1,197 @@
+---
+// CommentThreadView.astro — pure presentational render of an already-grouped
+// comment thread (or the honest empty state). Split out from CommentThread.astro
+// so this half is testable with plain fixture objects, without touching
+// astro:content or the Container API's virtual-module wiring.
+//
+// One visual nesting level (design §3): buildThread() has already flattened any
+// reply-to-a-reply chain under its true top-level ancestor — this component just
+// renders what it's given.
+//
+// PII-scan contract: every element carrying user-submitted text (author name,
+// comment body — including the parent-name repeated in a reply's "In reply to"
+// marker) is wrapped in <span data-comment-text>. scripts/check-links.mjs's PII
+// gate (T14) scans exactly these regions in the built HTML — do not rename or
+// remove this attribute without updating that gate too.
+import FormattedDate from './FormattedDate.astro';
+import { buildThread, type CommentInput } from '../lib/comment-thread';
+import { COMMENT_AUTHOR_NAME } from '../consts';
+
+interface Props {
+  comments: CommentInput[];
+}
+
+const { comments } = Astro.props;
+const groups = buildThread(comments);
+---
+<div class="comment-thread">
+  {groups.length === 0 ? (
+    <p class="comment-empty">No comments yet — be the first.</p>
+  ) : (
+    groups.map(({ top, replies }) => (
+      <div class="comment-group">
+        <div class="comment" id={`comment-${top.id}`}>
+          <p class="comment-meta">
+            <span class="comment-author-name" data-comment-text>{top.author}</span>
+            {top.author === COMMENT_AUTHOR_NAME && <span class="comment-author-badge">AUTHOR</span>}
+            {' · '}
+            <a href={`#comment-${top.id}`} class="comment-date-link">
+              <FormattedDate date={top.date} />
+            </a>
+          </p>
+          <p class="comment-body" data-comment-text>{top.body}</p>
+          <a
+            href="#comment-form"
+            class="comment-reply-btn"
+            data-reply-id={top.id}
+            data-reply-name={top.author}
+          >
+            Reply
+          </a>
+        </div>
+        {replies.map(({ comment, parent }) => (
+          <div class="comment comment--reply" id={`comment-${comment.id}`}>
+            <p class="comment-reply-marker">
+              {'↳ In reply to '}<span data-comment-text>{parent.author}</span>
+            </p>
+            <p class="comment-meta">
+              <span class="comment-author-name" data-comment-text>{comment.author}</span>
+              {comment.author === COMMENT_AUTHOR_NAME && <span class="comment-author-badge">AUTHOR</span>}
+              {' · '}
+              <a href={`#comment-${comment.id}`} class="comment-date-link">
+                <FormattedDate date={comment.date} />
+              </a>
+            </p>
+            <p class="comment-body" data-comment-text>{comment.body}</p>
+            <a
+              href="#comment-form"
+              class="comment-reply-btn"
+              data-reply-id={comment.id}
+              data-reply-name={comment.author}
+            >
+              Reply
+            </a>
+          </div>
+        ))}
+      </div>
+    ))
+  )}
+</div>
+
+<style>
+  .comment-thread {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .comment-empty {
+    color: var(--text-secondary);
+    font-size: var(--fs-body);
+    margin: 0;
+  }
+
+  .comment-group {
+    border-top: 1px solid var(--border);
+    padding-block: var(--space-5);
+  }
+
+  .comment-group:first-child {
+    border-top: none;
+    padding-top: 0;
+  }
+
+  .comment + .comment {
+    margin-top: var(--space-4);
+  }
+
+  .comment-meta {
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-1);
+    margin: 0 0 var(--space-2);
+    font-size: var(--fs-small);
+    color: var(--text-muted);
+  }
+
+  .comment-author-name {
+    font-weight: 600;
+    color: var(--text);
+    font-size: var(--fs-small);
+  }
+
+  /* The word itself is the signal — no color-only encoding (accessibility-gate lesson). */
+  .comment-author-badge {
+    font-size: var(--fs-caption);
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--brand-ink);
+    margin-left: var(--space-1);
+  }
+
+  .comment-date-link {
+    color: var(--text-muted);
+    text-decoration: none;
+  }
+
+  .comment-date-link:hover {
+    text-decoration: underline;
+  }
+
+  .comment-date-link:focus-visible {
+    outline: 3px solid var(--focus-ring);
+    outline-offset: 2px;
+    border-radius: var(--radius-sm);
+  }
+
+  .comment-body {
+    color: var(--text);
+    line-height: 1.7;
+    margin: 0 0 var(--space-3);
+    white-space: pre-line; /* paragraph breaks survive without markdown (T10: still plain text) */
+    overflow-wrap: anywhere; /* an unbroken pasted URL can't force horizontal scroll at 320px */
+  }
+
+  .comment-reply-btn {
+    display: inline-flex;
+    align-items: center;
+    /* Visually small link text, but padded to a real ≥48px tap target — the tap-target
+       measurement the design doc calls out explicitly (invisible padding does the work). */
+    min-height: 48px;
+    padding-inline: var(--space-1);
+    color: var(--brand-ink);
+    font-size: var(--fs-small);
+    text-decoration: none;
+  }
+
+  .comment-reply-btn:hover {
+    text-decoration: underline;
+  }
+
+  .comment-reply-btn:focus-visible {
+    outline: 3px solid var(--focus-ring);
+    outline-offset: 2px;
+    border-radius: var(--radius-sm);
+  }
+
+  /* Reply association — THREE redundant, non-color carriers (accessibility-gate lesson):
+     1. indent, 2. a structural left border, 3. the "↳ In reply to <name>" text itself. */
+  .comment--reply {
+    margin-top: var(--space-4);
+    margin-left: var(--space-5); /* 24px desktop */
+    padding-left: var(--space-4);
+    border-left: 2px solid var(--border-strong);
+  }
+
+  .comment-reply-marker {
+    margin: 0 0 var(--space-2);
+    font-size: var(--fs-caption);
+    color: var(--text-muted);
+  }
+
+  @media (max-width: 480px) {
+    .comment--reply {
+      margin-left: var(--space-4); /* 16px — never shrink body text to buy indent room */
+    }
+  }
+</style>

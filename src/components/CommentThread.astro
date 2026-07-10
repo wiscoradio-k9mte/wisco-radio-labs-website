@@ -1,0 +1,26 @@
+---
+// CommentThread.astro — thin data-fetching wrapper: reads the real comments
+// collection for one post and hands the plain data to CommentThreadView.astro
+// (the presentational half, unit-tested separately with fixture objects).
+// Not itself unit-tested — this is content-collection glue, same as [...slug].astro's
+// own getStaticPaths/getCollection call, which this codebase also leaves untested.
+import { getCollection } from 'astro:content';
+import CommentThreadView from './CommentThreadView.astro';
+import type { CommentInput } from '../lib/comment-thread';
+
+interface Props {
+  postSlug: string;
+}
+
+const { postSlug } = Astro.props;
+
+const entries = await getCollection('comments', ({ data }) => data.postSlug === postSlug);
+const comments: CommentInput[] = entries.map((e) => ({
+  id: e.data.id,
+  parentId: e.data.parentId,
+  author: e.data.author,
+  date: e.data.date,
+  body: e.data.body,
+}));
+---
+<CommentThreadView comments={comments} />
