@@ -6,6 +6,8 @@ import { Image } from 'astro:assets';
 import BaseLayout from './BaseLayout.astro';
 import FormattedDate from '../components/FormattedDate.astro';
 import YouTubeEmbed from '../components/YouTubeEmbed.astro';
+import CommentThread from '../components/CommentThread.astro';
+import CommentForm from '../components/CommentForm.astro';
 import { withBase } from '../lib/link';
 interface Props {
   title: string;
@@ -16,9 +18,10 @@ interface Props {
   heroCaption?: string;
   tags?: string[];
   youtube?: string;
+  postSlug: string;
 }
 
-const { title, description, pubDate, updatedDate, heroImage, heroCaption, tags = [], youtube } = Astro.props;
+const { title, description, pubDate, updatedDate, heroImage, heroCaption, tags = [], youtube, postSlug } = Astro.props;
 
 // JSON-LD: BlogPosting — per-article, injected into <head> via BaseLayout's head slot.
 // Astro.url.href is the canonical URL for this post (site + base + slug, already correct).
@@ -124,6 +127,16 @@ const postSchema = JSON.stringify({
       <p class="back-link-wrap">
         <a href={withBase('/blog/')}>&#8592; All posts</a>
       </p>
+
+      <!-- Comments — thread above the form (read the conversation, then join it).
+           H2 -> H3 respects the heading gates: the prose ends at whatever level, so a
+           following H2 here is never a skip; H3 "Leave a comment" lives inside CommentForm. -->
+      <section class="comments-section" aria-labelledby="comments-heading">
+        <hr class="comments-hr" />
+        <h2 id="comments-heading" class="comments-heading">Comments</h2>
+        <CommentThread postSlug={postSlug} />
+        <CommentForm postSlug={postSlug} />
+      </section>
     </div>
   </article>
 </BaseLayout>
@@ -258,6 +271,20 @@ const postSchema = JSON.stringify({
   .back-link-wrap {
     margin-top: var(--space-8);
     font-size: var(--fs-small);
+  }
+
+  /* ── Comments section ────────────────────────────────────────────────────── */
+  .comments-hr {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin-block: var(--space-8);
+  }
+
+  .comments-heading {
+    font-size: var(--fs-h2);
+    font-family: var(--font-display);
+    color: var(--text);
+    margin: 0 0 var(--space-5);
   }
 
   /* ── Code-block copy button ───────────────────────────────────────────────── */
