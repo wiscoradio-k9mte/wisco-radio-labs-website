@@ -130,8 +130,25 @@ const groups = buildThread(comments);
   }
 
   .comment-date-link {
+    /* Gate measurement: 76×24 @360px — well under the ≥48px tap-height bar. A literal
+       min-height here would grow the whole .comment-meta row (it's a shared flex line
+       with the author name/badge), throwing off vertical rhythm for no visual gain — so
+       the hit area is extended with an invisible ::before overlay instead: the visible
+       text stays small, only the tappable region grows. */
+    position: relative;
+    display: inline-block;
     color: var(--text-muted);
     text-decoration: none;
+  }
+
+  .comment-date-link::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    min-height: 48px;
+    transform: translateY(-50%);
   }
 
   .comment-date-link:hover {
@@ -155,10 +172,14 @@ const groups = buildThread(comments);
   .comment-reply-btn {
     display: inline-flex;
     align-items: center;
+    justify-content: center;
     /* Visually small link text, but padded to a real ≥48px tap target — the tap-target
-       measurement the design doc calls out explicitly (invisible padding does the work). */
+       measurement the design doc calls out explicitly (invisible padding does the work).
+       Gate measurement: 46×48 @360px — min-width plus a touch more horizontal padding
+       closes the 2px width gap with margin to spare. */
     min-height: 48px;
-    padding-inline: var(--space-1);
+    min-width: 48px;
+    padding-inline: var(--space-2);
     color: var(--brand-ink);
     font-size: var(--fs-small);
     text-decoration: none;

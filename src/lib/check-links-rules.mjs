@@ -218,8 +218,9 @@ export function checkBmcLink(html, url, ctx = '') {
 // ─── Gate 8: comments PII invariant (blog-comments T14) ─────────────────────
 // No email-shaped string from the comments pipeline may ever reach the repo or dist/.
 // Two scan surfaces, each with its own scoping rationale:
-//   - Rendered HTML: scoped to <span data-comment-text>…</span> regions only — the
-//     marker every comment author/body render uses. Scanning the WHOLE page would
+//   - Rendered HTML: scoped to <span …> or <p …> data-comment-text regions only —
+//     the marker every comment author/body render uses (author is a <span>, body is
+//     a <p> — both tags matter, see checkCommentHtmlPii). Scanning the WHOLE page would
 //     false-positive on the site's own CONTACT_EMAIL, which legitimately appears many
 //     times in unrelated chrome (footer mailto, contact/privacy pages) — narrowing to
 //     just the user-submitted comment text is both more precise AND the literal ask
@@ -250,17 +251,24 @@ export function findLeakedEmails(text, allowlist = []) {
  * the boundary the comment templates use to wrap user-submitted author names
  * and comment bodies — for non-allowlisted email-shaped strings.
  *
+ * The tag name is captured and backreferenced (\1) rather than hardcoded, because
+ * CommentThreadView.astro marks author names with <span data-comment-text> but
+ * comment BODIES with <p class="comment-body" data-comment-text> — a span-only
+ * regex silently missed every body, which is most of the user-submitted text on
+ * the page. (Found by the test-qa gate: a planted body-leak reached dist/ with
+ * zero scan error under the span-only version.)
+ *
  * @param {string} html
  * @param {string[]} allowlist
  * @param {string} [ctx]
  * @returns {{ message: string }[]}
  */
 export function checkCommentHtmlPii(html, allowlist, ctx = '') {
-  const regionRe = /<span[^>]*\bdata-comment-text\b[^>]*>([\s\S]*?)<\/span>/g;
+  const regionRe = /<(span|p)[^>]*\bdata-comment-text\b[^>]*>([\s\S]*?)<\/\1>/g;
   const violations = [];
   let match;
   while ((match = regionRe.exec(html)) !== null) {
-    for (const email of findLeakedEmails(match[1], allowlist)) {
+    for (const email of findLeakedEmails(match[2], allowlist)) {
       violations.push({
         message: `ERROR: email-shaped string "${email}" found in rendered comment content in ${ctx}`,
       });

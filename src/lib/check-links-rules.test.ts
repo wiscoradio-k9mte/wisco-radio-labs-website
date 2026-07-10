@@ -365,30 +365,90 @@ describe('findLeakedEmails', () => {
 });
 
 describe('checkCommentHtmlPii', () => {
-  it('reports an email-shaped string found inside a data-comment-text span', () => {
-    const html = '<span class="comment-body" data-comment-text>email me at leaker@example.com</span>';
+  // Fixtures below use the REAL tag each region renders as in CommentThreadView.astro —
+  // author name is a <span>, comment BODY is a <p class="comment-body" data-comment-text>.
+  // A prior version of this test suite used <span> for both, which matched the (then
+  // span-only) scanner regex but NOT the actual template — the gate proved a real
+  // rendered-body leak reached dist/ with zero scan error under that mismatch.
+
+  it('reports an email-shaped string found inside a data-comment-text SPAN (author name)', () => {
+    const html = '<span class="comment-author-name" data-comment-text>leaker@example.com</span>';
     const vs = checkCommentHtmlPii(html, [CONTACT_EMAIL]);
     expect(vs).toHaveLength(1);
     expect(vs[0].message).toContain('leaker@example.com');
     expect(vs[0].message).toContain('rendered comment content');
   });
 
-  it('does not report the allowlisted CONTACT_EMAIL inside a data-comment-text span', () => {
-    const html = `<span class="comment-body" data-comment-text>email me at ${CONTACT_EMAIL}</span>`;
+  it('reports an email-shaped string found inside a data-comment-text P (comment body — the real tag CommentThreadView uses)', () => {
+    const html = '<p class="comment-body" data-comment-text>email me at leaker@example.com</p>';
+    const vs = checkCommentHtmlPii(html, [CONTACT_EMAIL]);
+    expect(vs).toHaveLength(1);
+    expect(vs[0].message).toContain('leaker@example.com');
+  });
+
+  it('does not report the allowlisted CONTACT_EMAIL inside a data-comment-text P', () => {
+    const html = `<p class="comment-body" data-comment-text>email me at ${CONTACT_EMAIL}</p>`;
     expect(checkCommentHtmlPii(html, [CONTACT_EMAIL])).toHaveLength(0);
   });
 
-  it('does NOT report an email-shaped string OUTSIDE any data-comment-text span (scoping proof)', () => {
+  it('does NOT report an email-shaped string OUTSIDE any data-comment-text region (scoping proof)', () => {
     // Simulates the footer mailto link + a form placeholder elsewhere on the same page —
     // neither is comment content, so the scoped scan must ignore them.
-    const html = '<a href="mailto:someone@example.com">Email</a><span data-comment-text>hello</span>';
+    const html = '<a href="mailto:someone@example.com">Email</a><p data-comment-text>hello</p>';
     expect(checkCommentHtmlPii(html, [CONTACT_EMAIL])).toHaveLength(0);
   });
 
   it('includes the context label in the violation message', () => {
-    const html = '<span data-comment-text>leaker@example.com</span>';
+    const html = '<p data-comment-text>leaker@example.com</p>';
     const vs = checkCommentHtmlPii(html, [CONTACT_EMAIL], '/blog/post/index.html');
     expect(vs[0].message).toContain('/blog/post/index.html');
+  });
+
+  it('does not let a <span>...<p> mismatch cross-close (a span opening must close with a span, a p with a p)', () => {
+    // Regression guard for the backreferenced-tag regex: adjacent span+p regions must
+    // not let the scanner's greedy match span from the <span> open to the <p> close
+    // (which would silently swallow real page content in between as "comment text").
+    const html = '<span data-comment-text>Sarah</span><p>unrelated page content, not a comment</p><p data-comment-text>leaker@example.com</p>';
+    const vs = checkCommentHtmlPii(html, [CONTACT_EMAIL]);
+    expect(vs).toHaveLength(1);
+    expect(vs[0].message).toContain('leaker@example.com');
+  });
+
+  // ─── Real rendered fragment (Container API) — ties this gate to the ACTUAL template ──
+  it('REAL RENDER: catches an email-shaped string planted in a CommentThreadView-rendered comment body', async () => {
+    const { experimental_AstroContainer: AstroContainer } = await import('astro/container');
+    const { default: CommentThreadView } = await import('../components/CommentThreadView.astro');
+    const container = await AstroContainer.create();
+    const html = await container.renderToString(CommentThreadView, {
+      props: {
+        comments: [
+          {
+            id: 'c1',
+            parentId: null,
+            author: 'Sarah',
+            date: new Date('2026-07-09'),
+            body: 'reach me at leaker@example.com if you want to chat',
+          },
+        ],
+      },
+    });
+    const vs = checkCommentHtmlPii(html, [CONTACT_EMAIL]);
+    expect(vs).toHaveLength(1);
+    expect(vs[0].message).toContain('leaker@example.com');
+  });
+
+  it('REAL RENDER: a clean CommentThreadView-rendered comment produces zero violations', async () => {
+    const { experimental_AstroContainer: AstroContainer } = await import('astro/container');
+    const { default: CommentThreadView } = await import('../components/CommentThreadView.astro');
+    const container = await AstroContainer.create();
+    const html = await container.renderToString(CommentThreadView, {
+      props: {
+        comments: [
+          { id: 'c1', parentId: null, author: 'Sarah', date: new Date('2026-07-09'), body: 'Great post, thanks!' },
+        ],
+      },
+    });
+    expect(checkCommentHtmlPii(html, [CONTACT_EMAIL])).toHaveLength(0);
   });
 });
 
