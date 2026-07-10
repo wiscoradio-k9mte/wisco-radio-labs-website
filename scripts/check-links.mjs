@@ -12,6 +12,9 @@
 //   7. The footer's "Buy Me a Coffee" link is present on every page with the
 //      exact expected href and the target="_blank" + rel="noopener noreferrer"
 //      safety attributes an external link needs.
+//   8. No email-shaped string (other than the site's own CONTACT_EMAIL) appears in
+//      rendered comment content or any comment data file — the PII invariant.
+//   9. No comment belonging to a draft: true post's slug leaks into dist/ anywhere.
 //
 // Run after `npm run build`:
 //   npm run test:links
@@ -31,16 +34,27 @@ import {
   checkDraftHtmlLeak,
   checkDraftInRss,
   checkBmcLink,
+  checkCommentHtmlPii,
+  checkCommentSourcePii,
+  checkDraftCommentLeak,
 } from '../src/lib/check-links-rules.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const DIST = join(__dirname, '..', 'dist');
 const BLOG_CONTENT = join(__dirname, '..', 'src', 'content', 'blog');
+const COMMENTS_CONTENT = join(__dirname, '..', 'src', 'content', 'comments');
 const BASE = '/wisco-radio-labs-website'; // must match astro.config.mjs base
 const BMC_URL = 'https://buymeacoffee.com/wiscoradiolabs'; // must match BMC_URL in src/consts.ts
+const CONTACT_EMAIL = 'wiscoradio@gmail.com'; // must match CONTACT_EMAIL in src/consts.ts — the
+                                               // PII gate's one allowed exception (Gate 8)
 
 let errors = 0;
 let filesChecked = 0;
+// Collected while walking dist/ HTML so the draft-comment-leak check (Gate 9) can
+// search across every built page, not just one at a time.
+const htmlContents = [];
+// Draft post slugs, populated by checkDraftExclusion() before checkCommentsSource() runs.
+let draftSlugs = [];
 
 async function walkHtml(dir) {
   const entries = await readdir(dir, { withFileTypes: true });
@@ -60,6 +74,7 @@ async function checkFile(filePath) {
   // Relative path is the label used in every error message for this file.
   // Strip the absolute dist prefix so the path reads as /blog/index.html etc.
   const context = filePath.replace(DIST, '');
+  htmlContents.push(content); // Gate 9 needs to search every page's content later.
 
   // Run each pure rule and print any violations it finds
   const violations = [
@@ -68,6 +83,7 @@ async function checkFile(filePath) {
     ...checkSingleH1(content, context),
     ...checkHeadingSkip(content, context),
     ...checkBmcLink(content, BMC_URL, context),
+    ...checkCommentHtmlPii(content, [CONTACT_EMAIL], context),
   ];
   for (const v of violations) {
     console.error(v.message);
@@ -89,7 +105,6 @@ async function checkDraftExclusion() {
     return; // no blog content dir — nothing to assert
   }
 
-  const draftSlugs = [];
   for (const file of blogFiles) {
     if (!/\.(md|mdx)$/.test(file)) continue;
     const raw = await readFile(join(BLOG_CONTENT, file), 'utf8');
@@ -126,6 +141,51 @@ async function checkDraftExclusion() {
   }
 }
 
+// ─── Gates 8-9: comments PII scan + draft-comment leak ──────────────────────
+// Reads every comment data file in src/content/comments/ (the whole live set — real
+// volume is near zero, per the DoR). Must run AFTER checkDraftExclusion() has
+// populated draftSlugs and AFTER every dist/ HTML file has been read into
+// htmlContents (both happen in the same top-level sequence below).
+async function checkCommentsSource() {
+  let files;
+  try {
+    files = await readdir(COMMENTS_CONTENT);
+  } catch {
+    return; // no comments content dir — nothing to assert
+  }
+
+  for (const file of files) {
+    if (!/\.(yaml|yml)$/.test(file)) continue;
+    const raw = await readFile(join(COMMENTS_CONTENT, file), 'utf8');
+
+    // Gate 8: raw source-file scan (backstops the schema's .strict() rejection —
+    // see check-links-rules.mjs for why this scans the WHOLE file).
+    for (const v of checkCommentSourcePii(raw, [CONTACT_EMAIL], file)) {
+      console.error(v.message);
+      errors++;
+    }
+
+    // Gate 9: a comment keyed to a draft post's slug must never appear in dist/.
+    // Lightweight field extraction (same style as parseFrontmatterDraft) — these
+    // are flat single-line YAML scalars, no need for a full YAML parser here.
+    const postSlugMatch = raw.match(/^postSlug:\s*"?([^"\n]+?)"?\s*$/m);
+    const idMatch = raw.match(/^id:\s*"?([^"\n]+?)"?\s*$/m);
+    if (!postSlugMatch || !idMatch) continue;
+    const postSlug = postSlugMatch[1];
+    const commentId = idMatch[1];
+    if (!draftSlugs.includes(postSlug)) continue;
+
+    // The comment's page anchor id (id="comment-<id>") is what would prove it
+    // rendered — see CommentThread.astro for where that anchor is emitted.
+    const anchor = `id="comment-${commentId}"`;
+    const appearsInDist = htmlContents.some((html) => html.includes(anchor));
+    for (const v of checkDraftCommentLeak(commentId, postSlug, appearsInDist)) {
+      console.error(v.message);
+      errors++;
+    }
+  }
+}
+
 // Check that dist/ exists
 try {
   await stat(DIST);
@@ -146,12 +206,13 @@ for (const f of htmlFiles) {
 }
 
 await checkDraftExclusion();
+await checkCommentsSource();
 
 if (errors > 0) {
   console.error(`\nBuild-output check FAILED: ${errors} issue(s) found across ${filesChecked} HTML file(s).`);
   console.error('Fix all issues above, rebuild, and re-run.');
   process.exit(1);
 } else {
-  console.log(`Build-output OK: ${filesChecked} HTML file(s) checked — 0 base-path leaks, 0 aria-id mismatches, 0 h1 violations, 0 heading skips, 0 draft leaks, 0 missing BMC links.`);
+  console.log(`Build-output OK: ${filesChecked} HTML file(s) checked — 0 base-path leaks, 0 aria-id mismatches, 0 h1 violations, 0 heading skips, 0 draft leaks, 0 missing BMC links, 0 comment PII leaks, 0 draft-comment leaks.`);
   process.exit(0);
 }

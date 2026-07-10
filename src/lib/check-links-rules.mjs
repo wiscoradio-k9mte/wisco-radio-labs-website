@@ -9,6 +9,9 @@
 // Violation shape: { message: string }
 //   message may contain embedded newlines for multi-line error output, matching
 //   the original multi-console.error style the CLI used before extraction.
+//
+// Gates 8-9 (blog comments) are the PII invariant + draft-comment leak checks —
+// see the comment above each for scope/rationale.
 
 // ─── Gate 1: base-path leak detection ───────────────────────────────────────
 
@@ -210,4 +213,95 @@ export function checkBmcLink(html, url, ctx = '') {
     violations.push({ message: `ERROR: "Buy Me a Coffee" link in ${ctx} is missing rel="noopener noreferrer"` });
   }
   return violations;
+}
+
+// ─── Gate 8: comments PII invariant (blog-comments T14) ─────────────────────
+// No email-shaped string from the comments pipeline may ever reach the repo or dist/.
+// Two scan surfaces, each with its own scoping rationale:
+//   - Rendered HTML: scoped to <span data-comment-text>…</span> regions only — the
+//     marker every comment author/body render uses. Scanning the WHOLE page would
+//     false-positive on the site's own CONTACT_EMAIL, which legitimately appears many
+//     times in unrelated chrome (footer mailto, contact/privacy pages) — narrowing to
+//     just the user-submitted comment text is both more precise AND the literal ask
+//     ("the rendered comment output").
+//   - Source data files: the ENTIRE raw file is scanned — a comment YAML file has
+//     nothing but comment fields, so there is no legitimate chrome to exempt.
+// In both scopes the ONLY allowed exception is an EXACT match for the site's own
+// CONTACT_EMAIL (never a substring/prefix match) — so nothing else can hide behind
+// it, and a genuine leak (any other email-shaped string) still bites.
+
+const EMAIL_RE = /[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/g;
+
+/**
+ * Every email-shaped string in `text` that is NOT an exact match for one of the
+ * allowed strings (normally just [CONTACT_EMAIL]).
+ *
+ * @param {string} text
+ * @param {string[]} allowlist
+ * @returns {string[]}
+ */
+export function findLeakedEmails(text, allowlist = []) {
+  const matches = text.match(EMAIL_RE) || [];
+  return matches.filter((m) => !allowlist.includes(m));
+}
+
+/**
+ * Scans only the `data-comment-text` marked regions of a rendered HTML page —
+ * the boundary the comment templates use to wrap user-submitted author names
+ * and comment bodies — for non-allowlisted email-shaped strings.
+ *
+ * @param {string} html
+ * @param {string[]} allowlist
+ * @param {string} [ctx]
+ * @returns {{ message: string }[]}
+ */
+export function checkCommentHtmlPii(html, allowlist, ctx = '') {
+  const regionRe = /<span[^>]*\bdata-comment-text\b[^>]*>([\s\S]*?)<\/span>/g;
+  const violations = [];
+  let match;
+  while ((match = regionRe.exec(html)) !== null) {
+    for (const email of findLeakedEmails(match[1], allowlist)) {
+      violations.push({
+        message: `ERROR: email-shaped string "${email}" found in rendered comment content in ${ctx}`,
+      });
+    }
+  }
+  return violations;
+}
+
+/**
+ * Scans an entire comment data-file's raw text for non-allowlisted email-shaped
+ * strings — catches both a body that contains one and an `email:` key someone
+ * added by hand (backstop for Gate T9's schema strictness).
+ *
+ * @param {string} raw  full comment data-file content (YAML)
+ * @param {string[]} allowlist
+ * @param {string} [ctx]
+ * @returns {{ message: string }[]}
+ */
+export function checkCommentSourcePii(raw, allowlist, ctx = '') {
+  return findLeakedEmails(raw, allowlist).map((email) => ({
+    message: `ERROR: email-shaped string "${email}" found in comment source file ${ctx}`,
+  }));
+}
+
+// ─── Gate 9: a draft post's comment must never leak into dist/ (T13) ───────
+// Extends the existing draft-exclusion gate to comment data: a comment keyed to a
+// draft: true post's slug should never render anywhere, because that post's own page
+// is never built. This asserts it directly rather than relying only on the absence
+// of the post page.
+
+/**
+ * @param {string}  commentId
+ * @param {string}  postSlug
+ * @param {boolean} appearsInDist  true if any dist HTML contains this comment's anchor id
+ * @returns {{ message: string }[]}
+ */
+export function checkDraftCommentLeak(commentId, postSlug, appearsInDist) {
+  if (!appearsInDist) return [];
+  return [{
+    message:
+      `ERROR: comment "${commentId}" for draft post "${postSlug}" leaked into dist/\n` +
+      '       (that post\'s page should never be built, so this comment should never appear).',
+  }];
 }

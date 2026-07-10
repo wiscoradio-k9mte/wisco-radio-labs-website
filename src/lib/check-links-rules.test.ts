@@ -18,10 +18,15 @@ import {
   checkDraftHtmlLeak,
   checkDraftInRss,
   checkBmcLink,
+  findLeakedEmails,
+  checkCommentHtmlPii,
+  checkCommentSourcePii,
+  checkDraftCommentLeak,
 } from './check-links-rules.mjs';
 
 const BASE = '/wisco-radio-labs-website';
 const BMC_URL = 'https://buymeacoffee.com/wiscoradiolabs';
+const CONTACT_EMAIL = 'wiscoradio@gmail.com';
 
 // ─── Gate 1: checkBasePathLeaks ───────────────────────────────────────────────
 
@@ -334,5 +339,90 @@ describe('checkBmcLink', () => {
     const html = '<footer></footer>';
     const vs = checkBmcLink(html, BMC_URL, '/about/index.html');
     expect(vs[0].message).toContain('/about/index.html');
+  });
+});
+
+// ─── Gate 8: findLeakedEmails / checkCommentHtmlPii / checkCommentSourcePii ──
+
+describe('findLeakedEmails', () => {
+  it('reports an email-shaped string not on the allowlist', () => {
+    expect(findLeakedEmails('reach me at sarah@example.com please', [])).toEqual(['sarah@example.com']);
+  });
+
+  it('excludes an exact allowlisted match', () => {
+    expect(findLeakedEmails(`contact ${CONTACT_EMAIL}`, [CONTACT_EMAIL])).toEqual([]);
+  });
+
+  it('still reports a DIFFERENT email even when the allowlisted one is also present', () => {
+    // Proves the allowlist can't be used to mask an unrelated leak.
+    const text = `official: ${CONTACT_EMAIL}, personal: leaker@example.com`;
+    expect(findLeakedEmails(text, [CONTACT_EMAIL])).toEqual(['leaker@example.com']);
+  });
+
+  it('reports nothing when the text has no email-shaped string', () => {
+    expect(findLeakedEmails('just a normal comment, no addresses here', [CONTACT_EMAIL])).toEqual([]);
+  });
+});
+
+describe('checkCommentHtmlPii', () => {
+  it('reports an email-shaped string found inside a data-comment-text span', () => {
+    const html = '<span class="comment-body" data-comment-text>email me at leaker@example.com</span>';
+    const vs = checkCommentHtmlPii(html, [CONTACT_EMAIL]);
+    expect(vs).toHaveLength(1);
+    expect(vs[0].message).toContain('leaker@example.com');
+    expect(vs[0].message).toContain('rendered comment content');
+  });
+
+  it('does not report the allowlisted CONTACT_EMAIL inside a data-comment-text span', () => {
+    const html = `<span class="comment-body" data-comment-text>email me at ${CONTACT_EMAIL}</span>`;
+    expect(checkCommentHtmlPii(html, [CONTACT_EMAIL])).toHaveLength(0);
+  });
+
+  it('does NOT report an email-shaped string OUTSIDE any data-comment-text span (scoping proof)', () => {
+    // Simulates the footer mailto link + a form placeholder elsewhere on the same page —
+    // neither is comment content, so the scoped scan must ignore them.
+    const html = '<a href="mailto:someone@example.com">Email</a><span data-comment-text>hello</span>';
+    expect(checkCommentHtmlPii(html, [CONTACT_EMAIL])).toHaveLength(0);
+  });
+
+  it('includes the context label in the violation message', () => {
+    const html = '<span data-comment-text>leaker@example.com</span>';
+    const vs = checkCommentHtmlPii(html, [CONTACT_EMAIL], '/blog/post/index.html');
+    expect(vs[0].message).toContain('/blog/post/index.html');
+  });
+});
+
+describe('checkCommentSourcePii', () => {
+  it('reports an email-shaped string added as an unauthorized "email:" key in raw YAML', () => {
+    const raw = 'postSlug: my-post\nid: my-post-1\nauthor: Sarah\nemail: sarah@example.com\nbody: hi\n';
+    const vs = checkCommentSourcePii(raw, [CONTACT_EMAIL], 'my-post-1.yaml');
+    expect(vs).toHaveLength(1);
+    expect(vs[0].message).toContain('sarah@example.com');
+    expect(vs[0].message).toContain('my-post-1.yaml');
+  });
+
+  it('does not report a clean comment source file', () => {
+    const raw = 'postSlug: my-post\nid: my-post-1\nauthor: Sarah\nbody: no addresses here\n';
+    expect(checkCommentSourcePii(raw, [CONTACT_EMAIL])).toHaveLength(0);
+  });
+
+  it('does not report the allowlisted CONTACT_EMAIL appearing in a body', () => {
+    const raw = `postSlug: my-post\nid: my-post-1\nauthor: Sarah\nbody: reach the site at ${CONTACT_EMAIL}\n`;
+    expect(checkCommentSourcePii(raw, [CONTACT_EMAIL])).toHaveLength(0);
+  });
+});
+
+// ─── Gate 9: checkDraftCommentLeak ───────────────────────────────────────────
+
+describe('checkDraftCommentLeak', () => {
+  it('reports a violation when a draft-post comment appears in dist/', () => {
+    const vs = checkDraftCommentLeak('draft-test-post-fixture-1', 'draft-test-post', true);
+    expect(vs).toHaveLength(1);
+    expect(vs[0].message).toContain('draft-test-post-fixture-1');
+    expect(vs[0].message).toContain('draft-test-post');
+  });
+
+  it('returns no violation when the comment does not appear in dist/', () => {
+    expect(checkDraftCommentLeak('draft-test-post-fixture-1', 'draft-test-post', false)).toHaveLength(0);
   });
 });
