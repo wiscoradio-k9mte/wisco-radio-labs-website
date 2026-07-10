@@ -42,3 +42,9 @@ export const ANALYTICS_ENABLED = false;
 // plan), so while we're iterating we tell search engines not to index it. Flip to false
 // at real go-live with the custom domain, so the launched site CAN be found/indexed.
 export const PREVIEW_NOINDEX = true;
+
+// Blog comments: the exact `author` string that triggers the AUTHOR badge on the comment
+// thread (Travis's own replies). Type this exact string in a comment data file's `author`
+// field at approve time (docs/comments-approve-workflow.md) to have it badged; the schema
+// has no separate "is this the owner" flag, so the badge is name-matched deliberately.
+export const COMMENT_AUTHOR_NAME = 'K9MTE';

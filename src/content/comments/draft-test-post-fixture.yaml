@@ -1,0 +1,13 @@
+# Permanent fixture (T13/T22, mirrors src/content/blog/draft-test-post.md) — keeps the
+# comments-never-leak-a-draft gate honest. postSlug ties this to the permanently-draft
+# post, whose page is never built in production, so this comment must appear NOWHERE
+# in dist/ — scripts/check-links.mjs asserts it by anchor id (see checkDraftCommentLeak).
+#
+# This is the ONLY entry in this directory. The live comments dir is otherwise empty —
+# no real post has a fake seeded comment (honesty over polish, T22).
+postSlug: draft-test-post
+id: draft-test-post-fixture-1
+parentId: null
+author: Test Fixture
+date: 2026-07-01
+body: This comment must never appear in dist/ — it belongs to the draft-test-post fixture.
