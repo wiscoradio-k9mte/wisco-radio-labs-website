@@ -1,0 +1,544 @@
+---
+// CommentForm.astro — per-post comment form on the same Web3Forms + hCaptcha stack
+// as ContactForm.astro. Interaction patterns (labels, error wiring, honeypot, async
+// submit, status panels) are reused verbatim from ContactForm — see the design doc
+// §2. All ids are comment-* so they never collide with contact-* on the same build.
+//
+// Reply-target state (design §4): the hidden parent-id/parent-author fields default
+// empty (a plain top-level comment). The Reply links rendered by CommentThreadView
+// are real anchors to #comment-form (honest no-JS fallback — parent-id stays empty,
+// Travis threads it by hand at approve time per docs/comments-approve-workflow.md).
+// The <script> below progressively enhances that click into setting the reply
+// target + showing the "Replying to <name>" chip, without which the anchor already
+// does the one thing that matters: gets the visitor to the form.
+import { WEB3FORMS_KEY, CONTACT_EMAIL } from '../consts';
+import { withBase } from '../lib/link';
+
+interface Props {
+  postSlug: string;
+}
+
+const { postSlug } = Astro.props;
+
+const isPlaceholder = WEB3FORMS_KEY === 'PLACEHOLDER_WEB3FORMS_KEY';
+---
+
+<h3 id="leave-a-comment-heading" class="comment-form-heading">Leave a comment</h3>
+
+<!-- Moderation disclosure (design §2.1) — always visible, plain prose, no box. -->
+<p class="comment-moderation-note">
+  I read and approve every comment by hand before it appears here — no bots, no
+  auto-publish. Approved comments (your name and your words) become part of this
+  site's public history, permanently. Comment accordingly.
+</p>
+
+{isPlaceholder ? (
+  <!-- Same graceful degradation as ContactForm: no key configured yet. -->
+  <p class="comment-fallback-text">
+    Comments aren't wired up yet — {CONTACT_EMAIL
+      ? <>reach me at <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a> in the meantime.</>
+      : 'reach out through the contact page in the meantime.'}
+  </p>
+) : (
+  <Fragment>
+  <!-- Replying-to chip — hidden until JS reveals it on a Reply click (§4). -->
+  <div id="comment-reply-chip" class="reply-chip" hidden>
+    <span>Replying to <span id="comment-reply-chip-name"></span></span>
+    <button type="button" id="comment-reply-cancel" class="reply-chip-cancel">Cancel</button>
+  </div>
+  <!-- Announces reply-target changes once, distinct from the persistent chip text above. -->
+  <p id="comment-reply-status" role="status" aria-live="polite" class="sr-only"></p>
+
+  <form
+    id="comment-form"
+    class="contact-form"
+    action="https://api.web3forms.com/submit"
+    method="POST"
+    novalidate
+    data-web3forms
+  >
+    <input type="hidden" name="access_key" value={WEB3FORMS_KEY} />
+    <input type="hidden" name="from_name" value="Wisco Radio Labs — Comment" />
+    <input type="hidden" name="post_slug" value={postSlug} />
+    <!-- Reply target — empty by default (top-level comment); set by the Reply flow. -->
+    <input type="hidden" id="comment-parent-id" name="parent_id" value="" />
+    <input type="hidden" id="comment-parent-author" name="parent_author" value="" />
+
+    <div class="honeypot" aria-hidden="true">
+      <label for="comment-botcheck-field">Leave this unchecked</label>
+      <input
+        type="checkbox"
+        id="comment-botcheck-field"
+        name="botcheck"
+        tabindex="-1"
+        autocomplete="off"
+      />
+    </div>
+
+    <div class="form-field">
+      <label class="form-label" for="comment-name">
+        Name <span class="form-required">(required)</span>
+      </label>
+      <input
+        class="form-input"
+        type="text"
+        id="comment-name"
+        name="name"
+        required
+        aria-required="true"
+        aria-describedby="comment-name-hint"
+        autocomplete="nickname"
+      />
+      <p class="form-hint" id="comment-name-hint">Shown publicly with your comment.</p>
+      <p class="form-error" id="comment-name-error" role="alert" hidden>
+        Please enter a name.
+      </p>
+    </div>
+
+    <div class="form-field">
+      <label class="form-label" for="comment-body">
+        Comment <span class="form-required">(required)</span>
+      </label>
+      <textarea
+        class="form-input form-textarea"
+        id="comment-body"
+        name="comment"
+        required
+        aria-required="true"
+        rows="5"
+      ></textarea>
+      <p class="form-error" id="comment-body-error" role="alert" hidden>
+        Please enter a comment.
+      </p>
+    </div>
+
+    <div class="form-field">
+      <label class="form-label" for="comment-email">
+        Email <span class="form-optional">(optional)</span>
+      </label>
+      <input
+        class="form-input"
+        type="email"
+        id="comment-email"
+        name="email"
+        aria-describedby="comment-email-hint"
+        autocomplete="email"
+        placeholder="you@example.com"
+      />
+      <p class="form-hint" id="comment-email-hint">
+        Only used to notify you of replies — never published.
+      </p>
+      <p class="form-error" id="comment-email-error" role="alert" hidden>
+        Enter a valid email address, or leave this blank.
+      </p>
+    </div>
+
+    <div class="form-field form-captcha">
+      <div class="h-captcha" data-captcha="true"></div>
+      <p class="form-error" id="comment-captcha-error" role="alert" hidden>
+        Please complete the captcha so I know you're human.
+      </p>
+    </div>
+
+    <div class="form-status" id="comment-form-success" role="status" hidden>
+      <p>
+        Got it — your comment is in the queue. I approve every comment by hand and the
+        site rebuilds after that, so it won't appear instantly. Thanks for reading. 73!
+      </p>
+    </div>
+    <div class="form-status form-status--error" id="comment-form-network-error" role="alert" hidden>
+      <p>
+        Something went wrong and your comment didn't send — please try again, or
+        reach me through the <a href={withBase('/contact/')}>contact page</a>.
+      </p>
+    </div>
+
+    <div class="form-actions">
+      <button class="btn btn-primary form-submit" type="submit" id="comment-form-submit-btn">
+        Post comment
+      </button>
+    </div>
+  </form>
+  <!-- Same Web3Forms client script as ContactForm — safe to load twice on one page
+       (it renders one hCaptcha widget per `.h-captcha[data-captcha]` element found),
+       but only one of ContactForm/CommentForm is ever on a page at a time in this
+       site, so this is simply the per-post copy of that script tag. -->
+  <script is:inline src="https://web3forms.com/client/script.js" async defer></script>
+  </Fragment>
+)}
+
+<script>
+  // Progressive enhancement: validate on blur, handle async Web3Forms submission,
+  // and manage the Reply-target state. Without JS the form POSTs normally and Reply
+  // links are plain anchors to #comment-form (parent-id stays empty — see §4 note above).
+  const form = document.querySelector<HTMLFormElement>('#comment-form[data-web3forms]');
+  if (form) {
+    const showError = (fieldId: string, message: string) => {
+      const input = document.getElementById(fieldId) as HTMLInputElement | null;
+      const errEl = document.getElementById(`${fieldId}-error`) as HTMLElement | null;
+      if (input && errEl) {
+        input.setAttribute('aria-invalid', 'true');
+        // Additive: Name/Email already carry a persistent hint via aria-describedby
+        // (design §2 — "separate element from the error"). Append the error id rather
+        // than replacing, so a screen reader still reaches the hint AND the error.
+        const hintId = `${fieldId}-hint`;
+        const hasHint = document.getElementById(hintId);
+        input.setAttribute('aria-describedby', hasHint ? `${hintId} ${fieldId}-error` : `${fieldId}-error`);
+        errEl.textContent = message;
+        errEl.hidden = false;
+      }
+    };
+
+    const clearError = (fieldId: string) => {
+      const input = document.getElementById(fieldId) as HTMLInputElement | null;
+      const errEl = document.getElementById(`${fieldId}-error`) as HTMLElement | null;
+      if (input && errEl) {
+        input.removeAttribute('aria-invalid');
+        // Restore to just the hint (if any) — never leave a stale reference to the
+        // now-hidden error element in aria-describedby.
+        const hintId = `${fieldId}-hint`;
+        if (document.getElementById(hintId)) {
+          input.setAttribute('aria-describedby', hintId);
+        } else {
+          input.removeAttribute('aria-describedby');
+        }
+        errEl.hidden = true;
+      }
+    };
+
+    form.addEventListener('blur', (e) => {
+      const target = e.target as HTMLInputElement;
+      if (!target?.id) return;
+      if (target.id === 'comment-name' && target.value.trim() === '') {
+        showError('comment-name', 'Please enter a name.');
+      } else if (target.id === 'comment-body' && target.value.trim() === '') {
+        showError('comment-body', 'Please enter a comment.');
+      } else if (
+        target.id === 'comment-email' &&
+        target.value.trim() !== '' &&
+        !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(target.value.trim())
+      ) {
+        showError('comment-email', 'Enter a valid email address, or leave this blank.');
+      } else if (['comment-name', 'comment-body', 'comment-email'].includes(target.id)) {
+        clearError(target.id);
+      }
+    }, true);
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      clearError('comment-name');
+      clearError('comment-body');
+      clearError('comment-email');
+      const captchaErr = document.getElementById('comment-captcha-error');
+      if (captchaErr) captchaErr.hidden = true;
+
+      const name = (document.getElementById('comment-name') as HTMLInputElement)?.value.trim();
+      const body = (document.getElementById('comment-body') as HTMLTextAreaElement)?.value.trim();
+      const email = (document.getElementById('comment-email') as HTMLInputElement)?.value.trim();
+      let firstError: HTMLElement | null = null;
+
+      if (!name) {
+        showError('comment-name', 'Please enter a name.');
+        firstError ??= document.getElementById('comment-name');
+      }
+      if (!body) {
+        showError('comment-body', 'Please enter a comment.');
+        firstError ??= document.getElementById('comment-body');
+      }
+      // Email is OPTIONAL — only validated when the visitor typed something.
+      if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        showError('comment-email', 'Enter a valid email address, or leave this blank.');
+        firstError ??= document.getElementById('comment-email');
+      }
+
+      if (firstError) {
+        firstError.focus();
+        return;
+      }
+
+      const captchaToken = (form.querySelector('textarea[name="h-captcha-response"]') as HTMLTextAreaElement | null)?.value || '';
+      if (!captchaToken) {
+        if (captchaErr) captchaErr.hidden = false;
+        return;
+      }
+
+      const btn = document.getElementById('comment-form-submit-btn') as HTMLButtonElement;
+      const success = document.getElementById('comment-form-success') as HTMLElement;
+      const netError = document.getElementById('comment-form-network-error') as HTMLElement;
+
+      btn.disabled = true;
+      btn.setAttribute('aria-busy', 'true');
+      btn.textContent = 'Sending…';
+      success.hidden = true;
+      netError.hidden = true;
+
+      try {
+        const resp = await fetch('https://api.web3forms.com/submit', {
+          method: 'POST',
+          headers: { Accept: 'application/json' },
+          body: new FormData(form),
+        });
+        const data = await resp.json() as { success: boolean; message?: string };
+
+        if (data.success) {
+          form.reset(); // also clears parent_id/parent_author back to their empty defaults
+          try { (window as any).hcaptcha?.reset(); } catch { /* widget may not expose reset; harmless */ }
+          clearReplyTarget();
+          success.hidden = false;
+          btn.disabled = false;
+          btn.removeAttribute('aria-busy');
+          btn.textContent = 'Post comment';
+        } else {
+          netError.hidden = false;
+          btn.disabled = false;
+          btn.removeAttribute('aria-busy');
+          btn.textContent = 'Post comment';
+        }
+      } catch {
+        netError.hidden = false;
+        btn.disabled = false;
+        btn.removeAttribute('aria-busy');
+        btn.textContent = 'Post comment';
+      }
+    });
+  }
+
+  // ── Reply-target state (design §4) ──────────────────────────────────────────
+  const parentIdField = document.getElementById('comment-parent-id') as HTMLInputElement | null;
+  const parentAuthorField = document.getElementById('comment-parent-author') as HTMLInputElement | null;
+  const chip = document.getElementById('comment-reply-chip');
+  const chipName = document.getElementById('comment-reply-chip-name');
+  const replyStatus = document.getElementById('comment-reply-status');
+  const nameInput = document.getElementById('comment-name') as HTMLInputElement | null;
+
+  function clearReplyTarget() {
+    if (parentIdField) parentIdField.value = '';
+    if (parentAuthorField) parentAuthorField.value = '';
+    if (chip) chip.hidden = true;
+    if (chipName) chipName.textContent = '';
+  }
+
+  document.querySelectorAll<HTMLAnchorElement>('.comment-reply-btn').forEach((link) => {
+    // No preventDefault: the anchor's native #comment-form jump still runs (identical
+    // to the no-JS path), so behavior stays consistent whether JS loaded or not — this
+    // just layers the reply-target state on top of that navigation.
+    link.addEventListener('click', () => {
+      const id = link.dataset.replyId ?? '';
+      const replyName = link.dataset.replyName ?? '';
+      if (parentIdField) parentIdField.value = id;
+      if (parentAuthorField) parentAuthorField.value = replyName;
+      if (chipName) chipName.textContent = replyName;
+      if (chip) chip.hidden = false;
+      if (replyStatus) replyStatus.textContent = `Replying to ${replyName}. Form is below the comments.`;
+      // Focus lands on Name once the browser's own hash-jump has had a beat to run.
+      setTimeout(() => nameInput?.focus(), 0);
+    });
+  });
+
+  document.getElementById('comment-reply-cancel')?.addEventListener('click', () => {
+    clearReplyTarget();
+    if (replyStatus) replyStatus.textContent = 'Reply cancelled — commenting on the post.';
+  });
+</script>
+
+<style>
+  /* [hidden] fix — see ContactForm.astro for the full explanation: author CSS always
+     beats the UA stylesheet's `[hidden] { display: none }`, so `.form-error`/`.form-status`/
+     `.reply-chip`'s own `display` rules below would otherwise show every error/status/chip
+     on page load, before anything happened. */
+  .form-error[hidden],
+  .form-status[hidden],
+  .reply-chip[hidden] {
+    display: none;
+  }
+
+  .comment-form-heading {
+    font-size: var(--fs-h3);
+    color: var(--text);
+    margin: var(--space-8) 0 var(--space-3);
+  }
+
+  .comment-moderation-note {
+    font-size: var(--fs-small);
+    color: var(--text-secondary);
+    line-height: 1.6;
+    max-width: var(--measure);
+    margin: 0 0 var(--space-5);
+  }
+
+  .comment-fallback-text {
+    color: var(--text);
+    line-height: 1.7;
+  }
+
+  .comment-fallback-text a {
+    color: var(--brand-ink);
+  }
+
+  /* Replying-to chip */
+  .reply-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-3);
+    background: var(--surface-2);
+    border-radius: var(--radius-pill);
+    padding: var(--space-2) var(--space-4);
+    margin-bottom: var(--space-4);
+    font-size: var(--fs-small);
+    color: var(--text-secondary);
+  }
+
+  .reply-chip-cancel {
+    min-height: 48px;
+    min-width: 48px;
+    padding-inline: var(--space-2);
+    background: none;
+    border: none;
+    color: var(--brand-ink);
+    font-family: var(--font-body);
+    font-size: var(--fs-small);
+    font-weight: 500;
+    cursor: pointer;
+    text-decoration: underline;
+  }
+
+  .reply-chip-cancel:focus-visible {
+    outline: 3px solid var(--focus-ring);
+    outline-offset: 2px;
+    border-radius: var(--radius-sm);
+  }
+
+  /* Form field/status styling — same tokens as ContactForm.astro (design: reuse verbatim). */
+  .contact-form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
+  }
+
+  .honeypot {
+    position: absolute;
+    left: -9999px;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+  }
+
+  .form-field {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+  }
+
+  .form-label {
+    font-size: var(--fs-small);
+    font-weight: 500;
+    color: var(--text);
+  }
+
+  .form-required,
+  .form-optional {
+    font-weight: 400;
+    color: var(--text-muted);
+  }
+
+  .form-hint {
+    font-size: var(--fs-caption);
+    color: var(--text-muted);
+    margin: 0;
+  }
+
+  .form-input {
+    min-height: 48px;
+    padding: var(--space-3);
+    background: var(--surface-2);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-sm);
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: var(--fs-body);
+    transition: border-color 150ms ease, outline 150ms ease;
+    width: 100%;
+  }
+
+  .form-input:hover {
+    border-color: var(--text-muted);
+  }
+
+  .form-input:focus {
+    outline: 3px solid var(--focus-ring);
+    outline-offset: 0;
+    border-color: var(--brand);
+  }
+
+  .form-input[aria-invalid='true'] {
+    border-color: var(--error);
+  }
+
+  .form-textarea {
+    min-height: 120px;
+    resize: vertical;
+    line-height: 1.6;
+  }
+
+  .form-error {
+    font-size: var(--fs-small);
+    color: var(--error);
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+  }
+
+  .form-error::before {
+    content: '!';
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--error);
+    color: white;
+    font-weight: 700;
+    font-size: 11px;
+    flex-shrink: 0;
+  }
+
+  .form-status {
+    padding: var(--space-4);
+    border-radius: var(--radius-md);
+    background: color-mix(in srgb, var(--success) 10%, transparent);
+    border: 2px solid var(--success);
+    color: var(--text);
+    font-size: var(--fs-small);
+  }
+
+  .form-status p { margin: 0; }
+
+  .form-status--error {
+    background: color-mix(in srgb, var(--error) 8%, transparent);
+    border-color: var(--error);
+  }
+
+  .form-status--error a {
+    color: var(--brand-ink);
+  }
+
+  .form-actions {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--space-4);
+  }
+
+  .form-submit {
+    width: 100%;
+  }
+
+  @media (min-width: 480px) {
+    .form-submit {
+      width: auto;
+      min-width: 180px;
+    }
+  }
+</style>
