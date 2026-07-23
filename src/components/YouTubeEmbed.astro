@@ -23,10 +23,12 @@ const videoId = extractYouTubeId(id);
   {videoId ? (
     <YouTube id={videoId} title={title} />
   ) : (
+    <Fragment>
     <!-- Fallback when no ID can be extracted: a link out to YouTube -->
     <p class="youtube-fallback">
       Video unavailable — <a href={`https://www.youtube.com/watch?v=${id}`} rel="noopener noreferrer" target="_blank">watch on YouTube ↗</a>
     </p>
+    </Fragment>
   )}
 </div>
 

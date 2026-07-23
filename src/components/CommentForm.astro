@@ -33,12 +33,14 @@ const isPlaceholder = WEB3FORMS_KEY === 'PLACEHOLDER_WEB3FORMS_KEY';
 </p>
 
 {isPlaceholder ? (
+  <Fragment>
   <!-- Same graceful degradation as ContactForm: no key configured yet. -->
   <p class="comment-fallback-text">
     Comments aren't wired up yet — {CONTACT_EMAIL
       ? <>reach me at <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a> in the meantime.</>
       : 'reach out through the contact page in the meantime.'}
   </p>
+  </Fragment>
 ) : (
   <Fragment>
   <!-- Replying-to chip — hidden until JS reveals it on a Reply click (§4). -->

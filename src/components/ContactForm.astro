@@ -14,6 +14,7 @@ const isPlaceholder = WEB3FORMS_KEY === 'PLACEHOLDER_WEB3FORMS_KEY';
 ---
 
 {isPlaceholder ? (
+  <Fragment>
   <!-- Placeholder state: key not yet configured; show a clean mailto path. -->
   <!-- No dev jargon, no form — just a direct working contact option. -->
   <div class="email-fallback">
@@ -27,6 +28,7 @@ const isPlaceholder = WEB3FORMS_KEY === 'PLACEHOLDER_WEB3FORMS_KEY';
     )}
     <p class="fallback-address">{CONTACT_EMAIL}</p>
   </div>
+  </Fragment>
 ) : (
   <Fragment>
   <!-- Form state: real key is set; render the full form with mailto as secondary. -->
