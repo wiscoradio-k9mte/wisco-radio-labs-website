@@ -435,7 +435,15 @@ describe('checkCommentHtmlPii', () => {
     const vs = checkCommentHtmlPii(html, [CONTACT_EMAIL]);
     expect(vs).toHaveLength(1);
     expect(vs[0].message).toContain('leaker@example.com');
-  });
+    // The Astro Container real-render (import astro/container + the component +
+    // AstroContainer.create + renderToString) legitimately costs ~5s cold — the
+    // FIRST of the two REAL RENDER tests to run bears that cold-start. That sits
+    // right at vitest's 5000ms default and tips over under CI CPU load (it was
+    // green on CI but flaked locally under contention). This is a genuinely slow
+    // real render, NOT a hang, so it gets headroom rather than a global cap bump
+    // (which would mask the fast pure-function tests). A wrong assertion still
+    // fails instantly. See CW-Trainer's parallel lesson (delay:null / per-test cap).
+  }, 20000);
 
   it('REAL RENDER: a clean CommentThreadView-rendered comment produces zero violations', async () => {
     const { experimental_AstroContainer: AstroContainer } = await import('astro/container');
@@ -449,7 +457,9 @@ describe('checkCommentHtmlPii', () => {
       },
     });
     expect(checkCommentHtmlPii(html, [CONTACT_EMAIL])).toHaveLength(0);
-  });
+    // Same real-render headroom as the sibling test above: whichever of the two
+    // runs first pays the ~5s Container cold-start, so both carry the cap.
+  }, 20000);
 });
 
 describe('checkCommentSourcePii', () => {
