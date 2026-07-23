@@ -26,7 +26,7 @@ So I built it. Then I built it again, better. Then I shipped it on Linux.
 
 ## The CW Trainer
 
-The [CW Trainer](/products/) is the first product out of Wisco Radio Labs — live on the Snap Store (the Linux app store) at v2.3.0. The QSO simulator covers POTA, SOTA, and IOTA (Parks, Summits, and Islands on the Air), plus ragchews.
+The [CW Trainer](/products/) is the first product out of Wisco Radio Labs — live on the Snap Store (the Linux app store) at v2.4.0. The QSO simulator covers POTA, SOTA, and IOTA (Parks, Summits, and Islands on the Air), plus ragchews.
 
 ![The CW Trainer's QSO simulator — a simulated on-air contact in progress.](../../assets/cw-trainer/cw-trainer-qso-simulator.png)
 
