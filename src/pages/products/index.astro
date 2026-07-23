@@ -1,7 +1,7 @@
 ---
 // Products page — CW Trainer detail.
 // v1: one product, so this IS the CW Trainer page. No product collection (YAGNI).
-// Facts are from ../CW-Trainer/CLAUDE.md — verified as of 2026-06-28.
+// Facts are from ../CW-Trainer/CLAUDE.md — verified as of 2026-07-22.
 import { Image } from 'astro:assets';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import banner from '../../assets/cw-trainer/cw-trainer-banner.png';
@@ -12,7 +12,7 @@ import screenshotCopy from '../../assets/cw-trainer/cw-trainer-copy-tab.png';
 ---
 <BaseLayout
   title="CW Trainer"
-  description="The Wisco Radio Labs CW Trainer — Koch-method Morse code lessons, copy and sending practice, QSO simulator. Live on the Snap Store at v2.3.0."
+  description="The Wisco Radio Labs CW Trainer — Koch-method Morse code lessons, copy and sending practice, QSO simulator. Live on the Snap Store at v2.4.0."
 >
 
   <!-- Banner -->
@@ -38,7 +38,7 @@ import screenshotCopy from '../../assets/cw-trainer/cw-trainer-copy-tab.png';
       <p class="product-lead">CW is Morse code. Learn it the way hams actually use it.</p>
       <p class="product-status">
         <span class="status-dot" aria-hidden="true">&#x1F7E2;</span>
-        Live on the Snap Store &middot; v2.3.0 &middot; free &amp; open source
+        Live on the Snap Store &middot; v2.4.0 &middot; free &amp; open source
       </p>
     </div>
 
@@ -105,8 +105,9 @@ import screenshotCopy from '../../assets/cw-trainer/cw-trainer-copy-tab.png';
         grades your <strong>fist</strong> (your sending rhythm) in the KEY drill, and copying
         random text at speed in the COPY drill. The <strong>QSO</strong> (radio contact)
         simulator walks you through realistic exchanges: POTA, SOTA, and IOTA (Parks, Summits,
-        and Islands on the Air) — activations and contacts — and <strong>ragchew</strong>
-        (a casual on-air chat) conversations.
+        and Islands on the Air) activations and contacts, <strong>ragchew</strong> (casual
+        on-air chat) conversations, working <strong>DX</strong> (distant, often rare stations,
+        with realistic foreign callsigns), and <strong>contest</strong> exchanges.
       </p>
       <p>
         It runs entirely offline — no network connection, no account, no tracking. It is free
@@ -257,7 +258,8 @@ import screenshotCopy from '../../assets/cw-trainer/cw-trainer-copy-tab.png';
         </li>
         <li>
           <strong>Try a QSO.</strong> The QSO simulator walks you through a realistic contact —
-          a POTA activation, a SOTA chase, an IOTA island contact, or a ragchew. Copy their side,
+          a POTA activation, a SOTA chase, an IOTA island contact, a ragchew, a DX contact, or a
+          contest exchange. Copy their side,
           send yours. It is a simulation; every real QSO will be different. The goal is confidence.
         </li>
       </ol>
